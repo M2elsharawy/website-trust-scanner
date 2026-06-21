@@ -9,6 +9,7 @@
     "subtitle": "Enter any website URL to get an instant security and trust assessment",
     "url_placeholder": "https://example.com",
     "check_button": "Check Now",
+    "scanning": "Scanning…",
     "disclaimer": "This scan checks general security indicators only. No penetration testing or deep scans are performed.",
     "trust_levels": {
       "high": "Trusted",
@@ -24,8 +25,33 @@
     },
     "coming_soon": "Under development — Launching soon"
   },
+  "results": {
+    "trust_score": "Trust Score",
+    "checks_title": "Security Checks",
+    "recommendations_title": "Recommendations",
+    "checks": {
+      "https": "HTTPS",
+      "ssl": "SSL Certificate",
+      "headers": "Security Headers",
+      "reputation": "Reputation"
+    },
+    "reputation": {
+      "clean": "Clean",
+      "flagged": "Flagged",
+      "unknown": "Unknown"
+    },
+    "headers_score": "{score} of {max} headers present",
+    "warnings": {
+      "ssl_expiry_soon": "SSL certificate expires soon"
+    },
+    "new_scan": "Check another website"
+  },
   "errors": {
     "invalid_url": "The entered URL is invalid. Please check the format.",
+    "ssrf_blocked": "This URL cannot be scanned.",
+    "domain_blocked": "This domain cannot be scanned.",
+    "rate_limit": "Too many requests. Please wait a moment and try again.",
+    "timeout": "Scan timed out. The site may be slow or unavailable.",
     "try_again": "An error occurred. Please try again."
   },
   "footer": {
