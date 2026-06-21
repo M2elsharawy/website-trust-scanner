@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     google_safe_browsing_api_key: str = ""
     virustotal_api_key: str = ""
 
+    # Admin API key (Phase 5 — replace with full auth in Phase 6)
+    # Generate with: python -c "import secrets; print(secrets.token_hex(32))"
+    admin_api_key: str = "change-me-admin-key"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

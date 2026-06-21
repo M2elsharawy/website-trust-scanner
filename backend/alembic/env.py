@@ -12,6 +12,7 @@ from app.db.base import Base
 # Import all models so SQLAlchemy registers their tables in Base.metadata
 import app.models.do_not_scan  # noqa: F401
 import app.models.audit_log    # noqa: F401
+import app.models.lead         # noqa: F401
 
 config = context.config
 
