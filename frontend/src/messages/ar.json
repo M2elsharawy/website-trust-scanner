@@ -9,6 +9,7 @@
     "subtitle": "أدخل رابط أي موقع للحصول على تقييم فوري للأمان والموثوقية",
     "url_placeholder": "https://example.com",
     "check_button": "افحص الآن",
+    "scanning": "جارٍ الفحص…",
     "disclaimer": "هذا الفحص يتحقق من مؤشرات أمان عامة فقط ولا ينفذ اختبارات اختراق أو فحوصات عميقة.",
     "trust_levels": {
       "high": "موثوق",
@@ -24,8 +25,33 @@
     },
     "coming_soon": "قيد التطوير — يُطلق قريبًا"
   },
+  "results": {
+    "trust_score": "نتيجة الثقة",
+    "checks_title": "فحوصات الأمان",
+    "recommendations_title": "التوصيات",
+    "checks": {
+      "https": "HTTPS",
+      "ssl": "شهادة SSL",
+      "headers": "ترويسات الأمان",
+      "reputation": "السمعة"
+    },
+    "reputation": {
+      "clean": "نظيف",
+      "flagged": "مُبلَّغ عنه",
+      "unknown": "غير معروف"
+    },
+    "headers_score": "{score} من {max} ترويسات موجودة",
+    "warnings": {
+      "ssl_expiry_soon": "شهادة SSL تنتهي قريباً"
+    },
+    "new_scan": "فحص موقع آخر"
+  },
   "errors": {
     "invalid_url": "الرابط المُدخَل غير صالح. يرجى التحقق من الصيغة.",
+    "ssrf_blocked": "لا يمكن فحص هذا الرابط.",
+    "domain_blocked": "لا يمكن فحص هذا النطاق.",
+    "rate_limit": "طلبات كثيرة. يرجى الانتظار لحظة والمحاولة مرة أخرى.",
+    "timeout": "انتهت مهلة الفحص. الموقع قد يكون بطيئاً أو غير متاح.",
     "try_again": "حدث خطأ. يرجى المحاولة مرة أخرى."
   },
   "footer": {
