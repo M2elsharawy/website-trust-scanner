@@ -1,0 +1,54 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+.npm
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Alembic (keep versions, ignore cache)
+alembic/__pycache__/
+
+# Environment — never commit real values
+.env
+.env.local
+.env.production
+.env.staging
+!.env.example
+
+# Database
+*.sql
+*.sqlite
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker volumes (local dev)
+postgres_data/
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+build/

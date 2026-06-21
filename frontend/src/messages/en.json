@@ -1,0 +1,34 @@
+{
+  "common": {
+    "app_name": "Website Trust Advisor",
+    "switch_language": "العربية",
+    "switch_language_locale": "ar"
+  },
+  "home": {
+    "title": "Is this website safe?",
+    "subtitle": "Enter any website URL to get an instant security and trust assessment",
+    "url_placeholder": "https://example.com",
+    "check_button": "Check Now",
+    "disclaimer": "This scan checks general security indicators only. No penetration testing or deep scans are performed.",
+    "trust_levels": {
+      "high": "Trusted",
+      "good": "Good",
+      "medium": "Medium",
+      "low": "Risky"
+    },
+    "recommendations": {
+      "safe_to_browse": "Safe to Browse",
+      "safe_for_email": "Safe for Email",
+      "safe_for_account": "Safe for Account",
+      "safe_for_payment": "Safe for Payment"
+    },
+    "coming_soon": "Under development — Launching soon"
+  },
+  "errors": {
+    "invalid_url": "The entered URL is invalid. Please check the format.",
+    "try_again": "An error occurred. Please try again."
+  },
+  "footer": {
+    "tagline": "Safe Scan • Non-Intrusive • Trustworthy"
+  }
+}

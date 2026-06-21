@@ -1,0 +1,34 @@
+{
+  "common": {
+    "app_name": "مساعد أمان المواقع",
+    "switch_language": "English",
+    "switch_language_locale": "en"
+  },
+  "home": {
+    "title": "هل هذا الموقع آمن؟",
+    "subtitle": "أدخل رابط أي موقع للحصول على تقييم فوري للأمان والموثوقية",
+    "url_placeholder": "https://example.com",
+    "check_button": "افحص الآن",
+    "disclaimer": "هذا الفحص يتحقق من مؤشرات أمان عامة فقط ولا ينفذ اختبارات اختراق أو فحوصات عميقة.",
+    "trust_levels": {
+      "high": "موثوق",
+      "good": "جيد",
+      "medium": "متوسط",
+      "low": "خطر"
+    },
+    "recommendations": {
+      "safe_to_browse": "آمن للتصفح",
+      "safe_for_email": "آمن لإدخال البريد",
+      "safe_for_account": "آمن لإنشاء حساب",
+      "safe_for_payment": "آمن للدفع الإلكتروني"
+    },
+    "coming_soon": "قيد التطوير — يُطلق قريبًا"
+  },
+  "errors": {
+    "invalid_url": "الرابط المُدخَل غير صالح. يرجى التحقق من الصيغة.",
+    "try_again": "حدث خطأ. يرجى المحاولة مرة أخرى."
+  },
+  "footer": {
+    "tagline": "فحص آمن • غير تدخلي • موثوق"
+  }
+}
