@@ -31,9 +31,15 @@ class Settings(BaseSettings):
     google_safe_browsing_api_key: str = ""
     virustotal_api_key: str = ""
 
-    # Admin API key (Phase 5 — replace with full auth in Phase 6)
-    # Generate with: python -c "import secrets; print(secrets.token_hex(32))"
+    # Admin API key (Phase 5 fallback — JWT with admin role is preferred from Phase 6)
     admin_api_key: str = "change-me-admin-key"
+
+    # Auth / JWT
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
+    # How many failed logins before temporary lockout
+    max_failed_logins: int = 5
+    login_lockout_minutes: int = 15
 
     model_config = SettingsConfigDict(
         env_file=".env",

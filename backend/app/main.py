@@ -34,6 +34,28 @@ app.add_middleware(
 
 
 @app.middleware("http")
+async def csrf_origin_check(request: Request, call_next):
+    """
+    CSRF protection for cookie-authenticated state-changing requests.
+
+    SameSite=Lax on cookies provides the primary defence. This server-side
+    Origin check adds defence-in-depth in production. Bearer requests are
+    CSRF-immune by design and are excluded from this check.
+    """
+    if settings.app_env != "development":
+        if request.method not in {"GET", "HEAD", "OPTIONS"}:
+            has_bearer = "authorization" in request.headers
+            if not has_bearer:
+                origin = request.headers.get("origin") or request.headers.get("referer", "")
+                if not any(origin.startswith(allowed) for allowed in settings.allowed_origins):
+                    return JSONResponse(
+                        status_code=403,
+                        content={"error": "CSRF_REJECTED", "message": "Origin not allowed"},
+                    )
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
