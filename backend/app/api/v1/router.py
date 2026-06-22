@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, health, owner_scans, scans, sites
+from app.api.v1 import auth, health, notifications, owner_scans, scans, sites
 from app.api.v1.admin import analytics as admin_analytics
 from app.api.v1.admin import leads as admin_leads
 
@@ -12,3 +12,4 @@ api_router.include_router(admin_analytics.router)
 api_router.include_router(auth.router)
 api_router.include_router(sites.router)
 api_router.include_router(owner_scans.router)
+api_router.include_router(notifications.router)
