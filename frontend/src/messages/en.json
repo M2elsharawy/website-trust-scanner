@@ -44,7 +44,39 @@
     "warnings": {
       "ssl_expiry_soon": "SSL certificate expires soon"
     },
-    "new_scan": "Check another website"
+    "new_scan": "Check another website",
+    "decision": {
+      "title": "Usage Decision",
+      "verdict": {
+        "suitable":        "Likely Suitable",
+        "caution":         "Use Caution",
+        "not_recommended": "Not Recommended Now"
+      },
+      "browse": {
+        "label": "Browsing",
+        "suitable":        "The site uses an encrypted connection and shows no clear risk indicators.",
+        "caution":         "You can browse, but avoid entering any important data until the indicators improve.",
+        "not_recommended": "We advise against browsing this site if you plan to click links or open files from it."
+      },
+      "account": {
+        "label": "Create Account",
+        "suitable":        "You can create an account, but use a different password from your important accounts.",
+        "caution":         "Creating an account is possible, but use a secondary email and a unique password.",
+        "not_recommended": "We do not recommend creating an account on this site at this time."
+      },
+      "payment": {
+        "label": "Payment",
+        "suitable":        "No clear risk indicators, but always verify the site name before entering payment details.",
+        "caution":         "Avoid paying unless you fully trust the organization behind this site.",
+        "not_recommended": "We do not recommend entering payment details on this site at this time."
+      },
+      "personal_data": {
+        "label": "Personal Data",
+        "suitable":        "Share only what is necessary — avoid sending sensitive information without a clear reason.",
+        "caution":         "Minimize what you share and avoid providing sensitive information.",
+        "not_recommended": "We do not recommend entering personal data on this site at this time."
+      }
+    }
   },
   "errors": {
     "invalid_url": "The entered URL is invalid. Please check the format.",
