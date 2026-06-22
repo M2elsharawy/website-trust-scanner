@@ -55,7 +55,105 @@
     "try_again": "An error occurred. Please try again."
   },
   "footer": {
-    "tagline": "Safe Scan • Non-Intrusive • Trustworthy"
+    "tagline": "Safe Scan • Non-Intrusive • Trustworthy",
+    "roadmap_link": "Product Roadmap"
+  },
+  "roadmap": {
+    "page_title": "Product Roadmap",
+    "headline": "Where are we now?",
+    "intro": "The goal of this app is not just to display technical errors, but to help users make decisions, help site owners fix issues, and then track improvement over time.",
+    "status_done": "Done",
+    "status_remaining": "Remaining",
+    "status_label": "Status",
+    "note_estimates": "These percentages are planning estimates, not automated measurements.",
+    "where_now_label": "Where we are now",
+    "where_now_value": "Public Trust Check is secured via the Safe Scan Runner.",
+    "next_step_label": "Next step",
+    "next_step_value": "Move Owner Scan to the Safe Scan Runner.",
+    "after_next_label": "After that",
+    "after_next_value": "Improve product experience: results page, report, fix plan, copy instructions, Before/After view.",
+    "visitor_path": {
+      "title": "Visitor Flow",
+      "status": "Near ready",
+      "flow": [
+        "Scan a URL",
+        "Get a Trust Score",
+        "Know if the site is safe for browsing, payment, or sharing personal data",
+        "No sensitive technical details exposed"
+      ],
+      "done": [
+        "URL input",
+        "General indicator checks",
+        "Trust Score",
+        "Safe Scan Runner for public requests",
+        "No sensitive data exposed"
+      ],
+      "remaining": [
+        "Improve results page",
+        "Clearer recommendations",
+        "Clear decision: browse / account / payment / personal data"
+      ]
+    },
+    "owner_path": {
+      "title": "Site Owner Flow",
+      "status": "Partially built — needs polish",
+      "flow": [
+        "Add your site",
+        "Prove ownership",
+        "Get a simplified + technical report",
+        "Copy fix instructions",
+        "Export a task for your developer",
+        "Re-scan",
+        "See improvement before/after"
+      ],
+      "done": [
+        "Site registration",
+        "DNS TXT ownership verification",
+        "Some reports",
+        "Partial scan history"
+      ],
+      "remaining": [
+        "Move Owner Scan to Safe Scan Runner",
+        "Improve fix plan",
+        "Copy fix instructions button",
+        "Export developer task",
+        "Clear Before / After view",
+        "Understandable periodic reports"
+      ]
+    },
+    "admin_path": {
+      "title": "Admin Flow",
+      "status": "Partially built — not first-launch priority",
+      "flow": [
+        "Scan general indicators",
+        "Create a Lead",
+        "Generate initial outreach report",
+        "Get approval",
+        "Activate deeper scan only after authorization",
+        "Convert client to monitoring subscription"
+      ],
+      "done": [
+        "Lead creation",
+        "Shallow Lead Audit",
+        "Lead Score",
+        "Outreach report"
+      ],
+      "remaining": [
+        "Keep scan shallow before approval",
+        "Authorization record",
+        "Convert Lead to Owner/Subscription",
+        "No deep scan without Authorization Record"
+      ]
+    },
+    "progress": {
+      "title": "Approximate Progress",
+      "security_arch": "Security Architecture",
+      "public_trust_mvp": "Public Trust MVP",
+      "owner_mvp": "Owner MVP",
+      "admin_lead_mvp": "Admin Lead MVP",
+      "fix_experience": "Fix Experience",
+      "beta_ready": "Beta Readiness"
+    }
   },
   "auth": {
     "login": "Log in",
