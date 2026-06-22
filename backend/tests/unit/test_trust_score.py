@@ -2,7 +2,6 @@
 Unit tests for the trust score computation.
 """
 
-import pytest
 
 from app.scanners.result import (
     DNSCheckResult,

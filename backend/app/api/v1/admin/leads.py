@@ -12,7 +12,6 @@ Audit Policy for Lead Audit:
 
 import uuid
 from datetime import datetime, timezone
-from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import func, select

@@ -52,3 +52,4 @@ logs/
 
 # Build artifacts
 build/
+tsconfig.tsbuildinfo

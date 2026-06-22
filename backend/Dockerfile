@@ -19,7 +19,7 @@ WORKDIR /app
 # Arabic PDF fonts (freefont-ttf provides FreeSerif with Arabic glyphs)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
-    ttf-freefont \
+    fonts-freefont-ttf \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed packages from builder

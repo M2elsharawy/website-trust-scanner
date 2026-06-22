@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Request, Response
-from jose import JWTError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +17,6 @@ from app.core.exceptions import (
 from app.core.security import (
     create_access_token,
     create_refresh_token_str,
-    decode_access_token,
     hash_password,
     hash_refresh_token,
     verify_password,

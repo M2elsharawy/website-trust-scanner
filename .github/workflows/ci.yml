@@ -19,20 +19,80 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+          cache-dependency-path: backend/requirements.dev.txt
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-freefont-ttf
+
+      - name: Install Python dependencies
+        working-directory: backend
+        run: pip install -r requirements.dev.txt
+
+      - name: Run unit tests
+        working-directory: backend
+        run: python -m pytest tests/unit/ -q --tb=short
+
+  backend-lint:
+    name: Backend lint (ruff)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff
+        working-directory: backend
+        run: ruff check .
+
+  backend-migrations:
+    name: Backend migration import check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
           cache-dependency-path: backend/requirements.txt
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ttf-freefont
+          sudo apt-get install -y --no-install-recommends fonts-freefont-ttf
 
       - name: Install Python dependencies
         working-directory: backend
         run: pip install -r requirements.txt
 
-      - name: Run unit tests
+      - name: Verify alembic env.py and all migration files import cleanly
         working-directory: backend
-        run: python -m pytest tests/unit/ -q --tb=short
+        run: |
+          python -c "import alembic.config"
+          python -c "
+          import importlib.util, pathlib, sys
+          sys.path.insert(0, '.')
+          versions_dir = pathlib.Path('alembic/versions')
+          for f in sorted(versions_dir.glob('*.py')):
+              spec = importlib.util.spec_from_file_location(f.stem, f)
+              mod = importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(mod)
+              print(f'  OK: {f.name}')
+          print('All migration files import cleanly.')
+          "
 
   frontend-typecheck:
     name: Frontend type check
