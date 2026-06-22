@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import URLValidationError
+from app.core.exceptions import DomainBlockedError, URLValidationError
 from app.core.scan_policy import ScanType, check_scan_allowed
 from app.core.url_validator import validate_url
 from app.models.do_not_scan import DoNotScan
@@ -66,11 +66,10 @@ async def run_public_trust_scan(
             resource_type="domain",
             resource_id=raw_domain,
         )
-        from app.core.exceptions import DomainBlockedError
         raise DomainBlockedError()
 
     # ── Step 3: URL validation / SSRF (DNS resolution happens here) ───────────
-    clean_url = validate_url(url_str, allow_http=True)
+    clean_url = validate_url(parse_target, allow_http=True)
 
     # ── Step 4: Extract validated hostname — guard if empty ───────────────────
     validated_hostname = urlparse(clean_url).hostname or ""
@@ -78,6 +77,25 @@ async def run_public_trust_scan(
         raise URLValidationError(
             message="validate_url returned URL with no extractable hostname"
         )
+
+    # ── Step 4b: Second Do Not Scan check — only if hostname changed after DNS ─
+    # validate_url does not rewrite hostnames, but defensive re-check catches
+    # any future normalization (IDN, CNAME flattening) that produces a different
+    # hostname than the one checked pre-DNS in Step 2.
+    if validated_hostname != raw_domain:
+        dns_row2 = await db.execute(
+            select(DoNotScan).where(func.lower(DoNotScan.domain) == validated_hostname.lower())
+        )
+        if dns_row2.scalar_one_or_none() is not None:
+            await log_event(
+                db,
+                action="scan.blocked_do_not_scan",
+                outcome="blocked",
+                actor_ip=actor_ip,
+                resource_type="domain",
+                resource_id=validated_hostname,
+            )
+            raise DomainBlockedError()
 
     # ── Step 5: Scan policy check ─────────────────────────────────────────────
     check_scan_allowed(

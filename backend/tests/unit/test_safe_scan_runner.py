@@ -10,6 +10,7 @@ Coverage:
 - Static analysis: scans.py must not call run_public_scan directly
 """
 
+import ast
 import re
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -28,11 +29,30 @@ from app.scanners.result import ScanData
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _make_db(*, domain_blocked: bool = False) -> AsyncMock:
-    """Return a mock AsyncSession. Controls whether DoNotScan row is found."""
+    """Return a mock AsyncSession. Every DoNotScan query returns the same result."""
     db = AsyncMock()
     scalar_result = MagicMock()
     scalar_result.scalar_one_or_none.return_value = object() if domain_blocked else None
     db.execute = AsyncMock(return_value=scalar_result)
+    db.add = MagicMock()
+    db.flush = AsyncMock()
+    return db
+
+
+def _make_db_sequence(*blocked_sequence: bool) -> AsyncMock:
+    """
+    Return a mock AsyncSession where consecutive db.execute() calls return
+    blocked/not-blocked results in the given sequence.
+    Use this when the runner may call db.execute more than once (e.g. second
+    Do Not Scan check on hostname mismatch).
+    """
+    db = AsyncMock()
+    results = []
+    for blocked in blocked_sequence:
+        r = MagicMock()
+        r.scalar_one_or_none.return_value = object() if blocked else None
+        results.append(r)
+    db.execute = AsyncMock(side_effect=results)
     db.add = MagicMock()
     db.flush = AsyncMock()
     return db
@@ -228,19 +248,110 @@ async def test_audit_log_failed_written_on_scanner_error():
     assert "scan.public_trust.completed" not in actions
 
 
+# ── Second Do Not Scan check on hostname mismatch ────────────────────────────
+
+async def test_second_do_not_scan_check_runs_on_hostname_mismatch():
+    """
+    If validate_url returns a URL with a different hostname than the raw input
+    (e.g. IDN normalization), the runner must re-check Do Not Scan against the
+    validated hostname and block before running any scanner.
+    """
+    # First db.execute (raw_domain "original.com") → not blocked
+    # Second db.execute (validated_hostname "different.com") → blocked
+    db = _make_db_sequence(False, True)
+
+    with (
+        patch("app.core.safe_scan_runner.validate_url", return_value="https://different.com"),
+        patch("app.core.safe_scan_runner.run_public_scan") as mock_runner,
+        patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
+        pytest.raises(DomainBlockedError),
+    ):
+        await run_public_trust_scan(
+            raw_url="https://original.com",
+            actor_ip=None,
+            db=db,
+        )
+
+    mock_runner.assert_not_called()
+
+
+async def test_second_do_not_scan_check_skipped_when_hostname_unchanged():
+    """
+    When validated_hostname == raw_domain (the common case), db.execute is
+    called exactly once — no redundant second Do Not Scan query.
+    """
+    db = _make_db(domain_blocked=False)
+    scan_data = _make_scan_data()
+
+    with (
+        patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
+        patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner.run_public_scan", return_value=scan_data),
+        patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
+    ):
+        await run_public_trust_scan(
+            raw_url="https://example.com",
+            actor_ip=None,
+            db=db,
+        )
+
+    db.execute.assert_called_once()
+
+
 # ── Static analysis: scans.py must not call run_public_scan directly ──────────
 
 def test_public_scan_handler_does_not_call_run_public_scan_directly():
     """
-    After wiring public_scan() to safe_scan_runner, scans.py must not
-    import or reference run_public_scan directly.
+    After wiring public_scan() to safe_scan_runner, scans.py must not:
+      - import run_public_scan from app.scanners.runner
+      - import app.scanners.runner at all
+      - call run_public_scan() directly
+
+    Uses ast.parse for import checks and re for call-site checks.
     """
     handler_file = (
         Path(__file__).resolve().parent.parent.parent
         / "app" / "api" / "v1" / "scans.py"
     )
     text = handler_file.read_text()
-    pattern = re.compile(r"\brun_public_scan\b")
-    assert not pattern.search(text), (
-        "scans.py references run_public_scan directly — delegate to safe_scan_runner instead"
+    tree = ast.parse(text, filename=str(handler_file))
+
+    violations: list[str] = []
+
+    for node in ast.walk(tree):
+        # Catch: from app.scanners.runner import run_public_scan (or any name)
+        if isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if "scanners.runner" in module or "scanners" == module.split(".")[-1]:
+                imported = [a.name for a in node.names]
+                if "run_public_scan" in imported:
+                    violations.append(
+                        f"line {node.lineno}: imports run_public_scan from {module}"
+                    )
+                elif "runner" in imported:
+                    violations.append(
+                        f"line {node.lineno}: imports scanner runner module from {module}"
+                    )
+        # Catch: import app.scanners.runner
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if "scanners.runner" in alias.name:
+                    violations.append(
+                        f"line {node.lineno}: imports scanner runner: {alias.name}"
+                    )
+        # Catch: run_public_scan(...) or obj.run_public_scan(...)
+        if isinstance(node, ast.Call):
+            fn = node.func
+            if isinstance(fn, ast.Name) and fn.id == "run_public_scan":
+                violations.append(f"line {fn.col_offset}: calls run_public_scan() directly")
+            elif isinstance(fn, ast.Attribute) and fn.attr == "run_public_scan":
+                violations.append("calls .run_public_scan() via attribute")
+
+    # Belt-and-suspenders: raw string check for the module path
+    if re.search(r"app\.scanners\.runner", text):
+        violations.append("string 'app.scanners.runner' found in scans.py")
+
+    assert not violations, (
+        "scans.py must not reference run_public_scan or app.scanners.runner directly "
+        f"— delegate to safe_scan_runner: {violations}"
     )
