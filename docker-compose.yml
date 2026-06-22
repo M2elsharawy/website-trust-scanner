@@ -7,12 +7,10 @@ services:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
-    volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
-      - frontend_next:/app/.next
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8000}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
   backend:
@@ -23,8 +21,29 @@ services:
       - "8000:8000"
     env_file:
       - .env
-    volumes:
-      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: >
+      celery -A app.tasks.scheduled_scans.celery_app worker
+      --loglevel=info --concurrency=2
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
@@ -32,20 +51,17 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  worker:
+  beat:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
+    command: >
+      celery -A app.tasks.scheduled_scans.celery_app beat
+      --loglevel=info
     env_file:
       - .env
-    volumes:
-      - ./backend:/app
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - redis
     restart: unless-stopped
 
   db:
@@ -68,8 +84,11 @@ services:
 
   redis:
     image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -79,5 +98,4 @@ services:
 
 volumes:
   postgres_data:
-  frontend_node_modules:
-  frontend_next:
+  redis_data:

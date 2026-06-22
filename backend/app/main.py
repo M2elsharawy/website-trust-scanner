@@ -1,5 +1,8 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -9,6 +12,14 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.exceptions import AppError
 from app.core.rate_limiter import limiter
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+_MAX_REQUEST_BODY_BYTES = 512 * 1024  # 512 KB
 
 app = FastAPI(
     title="Website Trust & Security Advisor API",
@@ -31,6 +42,25 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     allow_headers=["Authorization", "Content-Type", "Accept-Language"],
 )
+
+# Only enforce trusted hosts in production to avoid breaking local dev
+if settings.app_env == "production":
+    _allowed_hosts = [
+        o.replace("https://", "").replace("http://", "")
+        for o in settings.allowed_origins
+    ]
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=_allowed_hosts)
+
+
+@app.middleware("http")
+async def limit_request_body(request: Request, call_next):
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > _MAX_REQUEST_BODY_BYTES:
+        return JSONResponse(
+            status_code=413,
+            content={"error": "REQUEST_TOO_LARGE", "message": "Request body too large"},
+        )
+    return await call_next(request)
 
 
 @app.middleware("http")
