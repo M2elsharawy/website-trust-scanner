@@ -9,11 +9,15 @@ import uuid as _uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
-from sqlalchemy import desc, select
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.exceptions import DomainBlockedError
+from app.core.scan_policy import ScanType, check_scan_allowed
+from app.core.url_validator import validate_url
 from app.db.session import get_db
+from app.models.do_not_scan import DoNotScan
 from app.models.scan_result import ScanResult
 from app.models.site import Site, SiteStatus
 from app.models.user import User
@@ -36,6 +40,35 @@ async def run_owner_scan(
 ) -> ScanResultDetail:
     """Run a new scan for a verified site and persist the result."""
     site = await _get_active_site(db, site_id, current_user)
+
+    # 1. URL validation — SSRF safety check on the stored domain
+    validate_url(f"https://{site.domain}")
+
+    # 2. Do Not Scan check — unconditional block, no owner override
+    dns_row = await db.execute(
+        select(DoNotScan).where(
+            func.lower(DoNotScan.domain) == site.domain.lower()
+        )
+    )
+    if dns_row.scalar_one_or_none() is not None:
+        await log_event(
+            db,
+            action="scan.owner.blocked_do_not_scan",
+            outcome="blocked",
+            actor_id=str(current_user.id),
+            actor_role=current_user.role.value,
+            resource_type="site",
+            resource_id=str(site.id),
+            details={"domain": site.domain},
+        )
+        raise DomainBlockedError()
+
+    # 3. Scan policy check
+    check_scan_allowed(
+        domain=site.domain,
+        scan_type=ScanType.PUBLIC_TRUST,
+        is_on_do_not_scan_list=False,
+    )
 
     scan_data = await run_public_scan(site.domain)
     report = compute_trust_report(site.domain, scan_data)

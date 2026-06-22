@@ -2,7 +2,6 @@
 Unit tests for Lead Score and Outreach generator.
 """
 
-import pytest
 
 from app.scanners.lead_score import compute_lead_score, score_to_opportunity_level
 from app.scanners.outreach import generate_outreach
@@ -163,7 +162,6 @@ class TestOutreachGenerator:
     def test_no_technical_details_in_messages(self):
         result = generate_outreach("example.com", _minimal_scan())
         msg_en = result["outreach_message_en"].lower()
-        msg_ar = result["outreach_message_ar"]
 
         # Must NOT contain specific header names
         assert "content-security-policy" not in msg_en

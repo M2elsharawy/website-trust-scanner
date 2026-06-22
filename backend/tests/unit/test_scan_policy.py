@@ -8,7 +8,6 @@ from app.core.scan_policy import ScanType, check_scan_allowed
 from app.core.exceptions import (
     AuthorizationRequiredError,
     DomainBlockedError,
-    ScanNotAllowedError,
 )
 
 

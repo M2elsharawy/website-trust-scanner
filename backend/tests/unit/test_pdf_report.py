@@ -1,6 +1,5 @@
 """Unit tests for PDF report generation."""
 
-import pytest
 
 from app.services.pdf_report import generate_pdf_report
 

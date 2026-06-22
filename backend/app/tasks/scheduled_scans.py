@@ -3,6 +3,10 @@ Celery periodic task: re-scan all verified sites once every 24 hours.
 
 Compares new score to the most recent stored score and fires notifications
 if the drop is >= 10 points or if there's a recovery.
+
+Every scan passes through the URL validator and scan policy engine before
+any outbound HTTP request is made.  Do Not Scan domains are blocked
+unconditionally — the scheduler has no override capability.
 """
 
 import asyncio
@@ -10,15 +14,19 @@ import logging
 
 from celery import Celery
 from celery.schedules import crontab
-from sqlalchemy import desc, select
+from sqlalchemy import func, desc, select
 
 from app.core.config import settings
+from app.core.exceptions import AppError
+from app.core.scan_policy import ScanType, check_scan_allowed
+from app.core.url_validator import validate_url
 from app.db.session import AsyncSessionFactory
-from app.models.notification import Notification
+from app.models.do_not_scan import DoNotScan
 from app.models.scan_result import ScanResult
 from app.models.site import Site, SiteStatus
 from app.scanners.runner import run_public_scan
 from app.scanners.trust_score import compute_trust_report
+from app.services.audit_logger import log_event
 from app.services.notification_service import (
     notify_scan_complete,
     notify_score_drop,
@@ -71,6 +79,38 @@ async def _async_rescan_all() -> dict:
 
 
 async def _rescan_site(db, site: Site) -> None:
+    # 1. URL validation — confirms the stored domain is still SSRF-safe
+    validate_url(f"https://{site.domain}")
+
+    # 2. Do Not Scan check — unconditional block, no scheduler override
+    dns_row = await db.execute(
+        select(DoNotScan).where(
+            func.lower(DoNotScan.domain) == site.domain.lower()
+        )
+    )
+    is_blocked = dns_row.scalar_one_or_none() is not None
+    if is_blocked:
+        await log_event(
+            db,
+            action="scheduled_scan.blocked_do_not_scan",
+            outcome="blocked",
+            resource_type="site",
+            resource_id=str(site.id),
+            details={"domain": site.domain},
+        )
+        raise AppError(
+            status_code=403,
+            error_code="DOMAIN_BLOCKED",
+            message=f"Domain '{site.domain}' is on the Do Not Scan list",
+        )
+
+    # 3. Scan policy check — PUBLIC_TRUST only (no Authorization Record required)
+    check_scan_allowed(
+        domain=site.domain,
+        scan_type=ScanType.PUBLIC_TRUST,
+        is_on_do_not_scan_list=False,
+    )
+
     # Get previous score
     prev_result = await db.execute(
         select(ScanResult)

@@ -2,7 +2,6 @@
 Unit tests for core security utilities (password hashing, JWT, refresh tokens).
 """
 
-import time
 
 import pytest
 from jose import JWTError

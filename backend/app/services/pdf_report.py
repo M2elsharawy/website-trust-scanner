@@ -14,7 +14,7 @@ import arabic_reshaper
 from bidi.algorithm import get_display
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -59,7 +59,6 @@ _LIGHT_GREY = colors.HexColor("#f1f5f9")
 
 def _styles() -> dict[str, ParagraphStyle]:
     _ensure_fonts()
-    base = getSampleStyleSheet()
     return {
         "title_ar": ParagraphStyle(
             "title_ar",
@@ -220,7 +219,7 @@ def generate_pdf_report(domain: str, report: dict[str, Any]) -> bytes:
     story.append(Spacer(1, 0.3 * cm))
 
     story.append(Paragraph(
-        _ar(f"درجة الثقة: ")
+        _ar("درجة الثقة: ")
         + f'<font color="{score_colour.hexval()}"><b>{score}/100</b></font>'
         + " — " + _ar(level_ar),
         s["heading_ar"],
@@ -281,7 +280,7 @@ def generate_pdf_report(domain: str, report: dict[str, Any]) -> bytes:
     story.append(Spacer(1, 0.3 * cm))
 
     story.append(Paragraph(
-        f"Trust Score: "
+        "Trust Score: "
         + f'<font color="{score_colour.hexval()}"><b>{score}/100</b></font>'
         + f" — {level_en}",
         s["heading_en"],

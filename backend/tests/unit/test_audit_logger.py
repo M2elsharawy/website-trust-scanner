@@ -3,8 +3,7 @@ Unit tests for the audit logger service.
 Tests focus on sanitization logic (no DB required for sanitization tests).
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from app.services.audit_logger import _sanitize_details, log_event
 
