@@ -14,7 +14,7 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
-from app.core.exceptions import DomainBlockedError
+from app.core.exceptions import DomainBlockedError, URLValidationError
 from app.core.scan_policy import ScanType, check_scan_allowed
 from app.core.url_validator import validate_url
 from app.db.session import get_db
@@ -42,11 +42,7 @@ async def run_owner_scan(
     """Run a new scan for a verified site and persist the result."""
     site = await _get_active_site(db, site_id, current_user)
 
-    # 1. URL validation — SSRF safety check on the stored domain
-    _clean_url = validate_url(f"https://{site.domain}")
-    _validated_domain = urlparse(_clean_url).hostname
-
-    # 2. Do Not Scan check — unconditional block, no owner override
+    # 1. Do Not Scan check — before any DNS resolution, no owner override
     dns_row = await db.execute(
         select(DoNotScan).where(
             func.lower(DoNotScan.domain) == site.domain.lower()
@@ -64,6 +60,12 @@ async def run_owner_scan(
             details={"domain": site.domain},
         )
         raise DomainBlockedError()
+
+    # 2. URL validation — SSRF safety check (involves DNS resolution)
+    _clean_url = validate_url(f"https://{site.domain}")
+    _validated_domain = urlparse(_clean_url).hostname
+    if not _validated_domain:
+        raise URLValidationError(message="validate_url returned URL with no extractable hostname")
 
     # 3. Scan policy check
     check_scan_allowed(
