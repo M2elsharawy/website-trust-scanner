@@ -126,17 +126,24 @@ def test_no_direct_httpx_asyncclient_in_scanners():
     """
     Scanner modules must use make_safe_client(), not httpx.AsyncClient() directly.
     Only app/core/http_client.py is allowed to instantiate AsyncClient.
+
+    Catches both forms:
+      httpx.AsyncClient(...)
+      from httpx import AsyncClient  (alias that could then be called directly)
     """
     scanner_dir = Path(__file__).resolve().parent.parent.parent / "app" / "scanners"
-    pattern = re.compile(r"httpx\.AsyncClient\s*\(")
+    # Direct instantiation via module attribute
+    direct = re.compile(r"httpx\.AsyncClient\s*\(")
+    # Import alias — importing AsyncClient by name enables bypassing the factory
+    alias = re.compile(r"from\s+httpx\s+import\b[^\n]*\bAsyncClient\b")
 
     violations = [
         f.name
         for f in scanner_dir.rglob("*.py")
-        if pattern.search(f.read_text())
+        if direct.search(f.read_text()) or alias.search(f.read_text())
     ]
 
     assert not violations, (
-        f"httpx.AsyncClient() instantiated directly in scanner files "
+        f"httpx.AsyncClient used directly in scanner files "
         f"(use make_safe_client instead): {violations}"
     )
