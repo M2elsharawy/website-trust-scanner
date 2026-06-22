@@ -17,6 +17,7 @@ import app.models.user           # noqa: F401
 import app.models.refresh_token  # noqa: F401
 import app.models.site           # noqa: F401
 import app.models.scan_result    # noqa: F401
+import app.models.notification   # noqa: F401
 
 config = context.config
 
