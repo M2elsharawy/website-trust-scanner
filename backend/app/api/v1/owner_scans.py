@@ -8,6 +8,7 @@ Results are persisted in scan_results and linked to the site.
 import uuid as _uuid
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +21,7 @@ from app.scanners.runner import run_public_scan
 from app.scanners.trust_score import compute_trust_report
 from app.schemas.scan_result import ScanResultDetail, ScanResultSummary
 from app.services.audit_logger import log_event
+from app.services.pdf_report import generate_pdf_report
 
 router = APIRouter(prefix="/sites/{site_id}/scans", tags=["owner-scans"])
 
@@ -101,6 +103,40 @@ async def get_scan_result(
     if scan is None:
         raise HTTPException(status_code=404, detail="Scan not found")
     return ScanResultDetail.model_validate(scan)
+
+
+@router.get("/{scan_id}/pdf")
+async def download_scan_pdf(
+    site_id: str,
+    scan_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    """Download a bilingual PDF report (Arabic first, then English)."""
+    site = await _get_active_site(db, site_id, current_user)
+
+    try:
+        sid = _uuid.UUID(scan_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    result = await db.execute(
+        select(ScanResult).where(
+            ScanResult.id == sid, ScanResult.site_id == site.id
+        )
+    )
+    scan = result.scalar_one_or_none()
+    if scan is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    pdf_bytes = generate_pdf_report(scan.domain, scan.result_json)
+    filename = f"security-report-{scan.domain}-{scan.id}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ── helpers ────────────────────────────────────────────────────────────────────
