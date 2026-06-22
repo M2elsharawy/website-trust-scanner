@@ -56,5 +56,28 @@
   },
   "footer": {
     "tagline": "Safe Scan • Non-Intrusive • Trustworthy"
+  },
+  "auth": {
+    "login": "Log in",
+    "register": "Create account",
+    "logout": "Log out",
+    "email": "Email",
+    "password": "Password",
+    "email_placeholder": "you@example.com",
+    "password_placeholder": "Min. 8 characters",
+    "preferred_lang": "Preferred language",
+    "lang_ar": "Arabic",
+    "lang_en": "English",
+    "login_title": "Log in to your account",
+    "register_title": "Create an account",
+    "no_account": "Don't have an account?",
+    "has_account": "Already have an account?",
+    "submitting": "Please wait…",
+    "errors": {
+      "invalid_credentials": "Incorrect email or password.",
+      "account_locked": "Account is temporarily locked. Try again in 15 minutes.",
+      "email_taken": "An account with this email already exists.",
+      "generic": "Something went wrong. Please try again."
+    }
   }
 }

@@ -59,3 +59,55 @@ class RateLimitExceededError(AppError):
     status_code = status.HTTP_429_TOO_MANY_REQUESTS
     error_code = "RATE_LIMIT_EXCEEDED"
     message = "Too many requests — please slow down"
+
+
+# ── Auth ─────────────────────────────────────────────────────────────────────
+
+class InvalidCredentialsError(AppError):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    error_code = "INVALID_CREDENTIALS"
+    message = "Incorrect email or password"
+
+
+class AccountLockedError(AppError):
+    status_code = status.HTTP_403_FORBIDDEN
+    error_code = "ACCOUNT_LOCKED"
+    message = "Account is temporarily locked due to too many failed login attempts"
+
+
+class AccountInactiveError(AppError):
+    status_code = status.HTTP_403_FORBIDDEN
+    error_code = "ACCOUNT_INACTIVE"
+    message = "Account is inactive"
+
+
+class TokenInvalidError(AppError):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    error_code = "TOKEN_INVALID"
+    message = "Invalid or expired token"
+
+
+class InsufficientRoleError(AppError):
+    status_code = status.HTTP_403_FORBIDDEN
+    error_code = "INSUFFICIENT_ROLE"
+    message = "You do not have permission to perform this action"
+
+
+class EmailAlreadyRegisteredError(AppError):
+    status_code = status.HTTP_409_CONFLICT
+    error_code = "EMAIL_ALREADY_REGISTERED"
+    message = "An account with this email already exists"
+
+
+# ── Ownership ─────────────────────────────────────────────────────────────────
+
+class OwnershipVerificationError(AppError):
+    status_code = status.HTTP_400_BAD_REQUEST
+    error_code = "OWNERSHIP_VERIFICATION_FAILED"
+    message = "DNS TXT record verification failed"
+
+
+class SiteNotFoundError(AppError):
+    status_code = status.HTTP_404_NOT_FOUND
+    error_code = "SITE_NOT_FOUND"
+    message = "Site not found"

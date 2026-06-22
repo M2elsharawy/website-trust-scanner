@@ -1,28 +1,68 @@
 """
-Admin API key authentication dependency.
+Admin authentication dependency.
 
-Phase 5 uses a simple static API key (X-Admin-Key header).
-Phase 6 will replace this with JWT + role-based auth.
+Accepts EITHER:
+  1. JWT access token (httpOnly cookie) with admin or super_admin role, OR
+  2. Static X-Admin-Key header (backward-compatible fallback from Phase 5).
 
-The key is compared in constant time to prevent timing attacks.
+The API-key path uses constant-time comparison to prevent timing attacks.
 """
 
 import secrets
 
-from fastapi import Header, HTTPException, status
+from fastapi import Cookie, Depends, Header, HTTPException, status
+from jose import JWTError
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.exceptions import InsufficientRoleError
+from app.core.security import decode_access_token
+from app.db.session import get_db
+from app.models.user import ADMIN_ROLES, User
 
 
-async def require_admin(x_admin_key: str = Header(...)) -> None:
+async def require_admin(
+    access_token: str | None = Cookie(default=None),
+    x_admin_key: str | None = Header(default=None),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
     """
-    FastAPI dependency: validates X-Admin-Key header.
+    FastAPI dependency: grants access to admin routes.
 
-    Uses secrets.compare_digest to prevent timing-based key enumeration.
-    Raises 401 on failure — never reveals why (invalid vs missing).
+    JWT path (preferred): validates access token cookie and confirms role is
+    admin or super_admin.
+
+    API-key path (fallback): validates X-Admin-Key using constant-time
+    comparison.  Returns None for actor since we have no User record.
     """
-    if not secrets.compare_digest(x_admin_key, settings.admin_api_key):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unauthorized",
-        )
+    # --- JWT path ---
+    if access_token:
+        try:
+            payload = decode_access_token(access_token)
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+            )
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+            )
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if user is None or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+            )
+        if user.role not in ADMIN_ROLES:
+            raise InsufficientRoleError()
+        return user
+
+    # --- API-key fallback path ---
+    if x_admin_key and secrets.compare_digest(x_admin_key, settings.admin_api_key):
+        return None  # No User object for key-based auth
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+    )

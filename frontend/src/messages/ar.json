@@ -56,5 +56,28 @@
   },
   "footer": {
     "tagline": "فحص آمن • غير تدخلي • موثوق"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "email_placeholder": "example@domain.com",
+    "password_placeholder": "8 أحرف على الأقل",
+    "preferred_lang": "اللغة المفضلة",
+    "lang_ar": "العربية",
+    "lang_en": "الإنجليزية",
+    "login_title": "تسجيل الدخول إلى حسابك",
+    "register_title": "إنشاء حساب جديد",
+    "no_account": "ليس لديك حساب؟",
+    "has_account": "لديك حساب بالفعل؟",
+    "submitting": "جارٍ التحميل…",
+    "errors": {
+      "invalid_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+      "account_locked": "الحساب مغلق مؤقتاً. حاول مرة أخرى بعد 15 دقيقة.",
+      "email_taken": "يوجد حساب بهذا البريد الإلكتروني مسبقاً.",
+      "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+    }
   }
 }
