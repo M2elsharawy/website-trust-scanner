@@ -41,8 +41,14 @@ export default function HomePage({
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-6 border-t border-slate-900">
+      <footer className="text-center py-6 border-t border-slate-900 space-y-1">
         <p className="text-slate-700 text-xs">{t('footer.tagline')}</p>
+        <Link
+          href="/roadmap"
+          className="text-slate-600 hover:text-slate-400 text-xs transition-colors"
+        >
+          {t('footer.roadmap_link')}
+        </Link>
       </footer>
     </div>
   )
