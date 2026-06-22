@@ -11,6 +11,7 @@ unconditionally — the scheduler has no override capability.
 
 import asyncio
 import logging
+from urllib.parse import urlparse
 
 from celery import Celery
 from celery.schedules import crontab
@@ -80,7 +81,8 @@ async def _async_rescan_all() -> dict:
 
 async def _rescan_site(db, site: Site) -> None:
     # 1. URL validation — confirms the stored domain is still SSRF-safe
-    validate_url(f"https://{site.domain}")
+    _clean_url = validate_url(f"https://{site.domain}")
+    _validated_domain = urlparse(_clean_url).hostname
 
     # 2. Do Not Scan check — unconditional block, no scheduler override
     dns_row = await db.execute(
@@ -122,7 +124,7 @@ async def _rescan_site(db, site: Site) -> None:
     prev_score = prev.trust_score if prev else None
 
     # Run new scan
-    scan_data = await run_public_scan(site.domain)
+    scan_data = await run_public_scan(_validated_domain)
     report = compute_trust_report(site.domain, scan_data)
     new_score = report["trust_score"]
 

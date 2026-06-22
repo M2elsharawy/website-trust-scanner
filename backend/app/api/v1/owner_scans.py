@@ -6,6 +6,7 @@ Results are persisted in scan_results and linked to the site.
 """
 
 import uuid as _uuid
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
@@ -42,7 +43,8 @@ async def run_owner_scan(
     site = await _get_active_site(db, site_id, current_user)
 
     # 1. URL validation — SSRF safety check on the stored domain
-    validate_url(f"https://{site.domain}")
+    _clean_url = validate_url(f"https://{site.domain}")
+    _validated_domain = urlparse(_clean_url).hostname
 
     # 2. Do Not Scan check — unconditional block, no owner override
     dns_row = await db.execute(
@@ -70,7 +72,7 @@ async def run_owner_scan(
         is_on_do_not_scan_list=False,
     )
 
-    scan_data = await run_public_scan(site.domain)
+    scan_data = await run_public_scan(_validated_domain)
     report = compute_trust_report(site.domain, scan_data)
 
     result = ScanResult(
