@@ -6,24 +6,18 @@ Results are persisted in scan_results and linked to the site.
 """
 
 import uuid as _uuid
-from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
-from app.core.exceptions import DomainBlockedError, URLValidationError
-from app.core.scan_policy import ScanType, check_scan_allowed
-from app.core.url_validator import validate_url
+from app.core.safe_scan_runner import run_owner_trust_scan
 from app.db.session import get_db
-from app.models.do_not_scan import DoNotScan
 from app.models.scan_result import ScanResult
 from app.models.site import Site, SiteStatus
 from app.models.user import User
-from app.scanners.runner import run_public_scan
-from app.scanners.trust_score import compute_trust_report
 from app.schemas.scan_result import ScanResultDetail, ScanResultSummary
 from app.services.audit_logger import log_event
 from app.services.pdf_report import generate_pdf_report
@@ -42,40 +36,13 @@ async def run_owner_scan(
     """Run a new scan for a verified site and persist the result."""
     site = await _get_active_site(db, site_id, current_user)
 
-    # 1. Do Not Scan check — before any DNS resolution, no owner override
-    dns_row = await db.execute(
-        select(DoNotScan).where(
-            func.lower(DoNotScan.domain) == site.domain.lower()
-        )
-    )
-    if dns_row.scalar_one_or_none() is not None:
-        await log_event(
-            db,
-            action="scan.owner.blocked_do_not_scan",
-            outcome="blocked",
-            actor_id=str(current_user.id),
-            actor_role=current_user.role.value,
-            resource_type="site",
-            resource_id=str(site.id),
-            details={"domain": site.domain},
-        )
-        raise DomainBlockedError()
-
-    # 2. URL validation — SSRF safety check (involves DNS resolution)
-    _clean_url = validate_url(f"https://{site.domain}")
-    _validated_domain = urlparse(_clean_url).hostname
-    if not _validated_domain:
-        raise URLValidationError(message="validate_url returned URL with no extractable hostname")
-
-    # 3. Scan policy check
-    check_scan_allowed(
+    report = await run_owner_trust_scan(
         domain=site.domain,
-        scan_type=ScanType.PUBLIC_TRUST,
-        is_on_do_not_scan_list=False,
+        actor_id=str(current_user.id),
+        actor_role=current_user.role.value,
+        site_id=str(site.id),
+        db=db,
     )
-
-    scan_data = await run_public_scan(_validated_domain)
-    report = compute_trust_report(site.domain, scan_data)
 
     result = ScanResult(
         site_id=site.id,
@@ -93,7 +60,7 @@ async def run_owner_scan(
         actor_role=current_user.role.value,
         resource_type="site",
         resource_id=str(site.id),
-        details={"trust_score": report["trust_score"], "domain": site.domain},
+        details={"trust_score": report["trust_score"]},
     )
 
     return ScanResultDetail.model_validate(result)

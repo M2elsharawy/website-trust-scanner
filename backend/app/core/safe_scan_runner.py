@@ -1,11 +1,12 @@
 """
-Safe Scan Runner — single enforcement point for Public Trust scans.
+Safe Scan Runner — single enforcement point for all scan types.
 
 Mandatory security order (must not be reordered):
   1.  Normalize input without DNS
   2.  Do Not Scan check          — before any network call
   3.  URL validation / SSRF      — DNS resolution + IP-range check
   4.  Extract validated hostname  — guard if empty
+  4b. Second Do Not Scan check   — only if hostname changed after DNS
   5.  Scan policy check
   6.  Rate limit / quota          — TODO: per-domain cap (IP-level handled by @limiter at API layer)
   7.  Audit log: scan requested
@@ -150,3 +151,98 @@ async def run_public_trust_scan(
 
     # ── Step 10: Return sanitized result only ─────────────────────────────────
     return TrustReport(**report)
+
+
+async def run_owner_trust_scan(
+    *,
+    domain: str,
+    actor_id: str,
+    actor_role: str,
+    site_id: str,
+    db: AsyncSession,
+) -> dict:
+    """
+    Execute an Owner Trust scan with the same mandatory security order as
+    run_public_trust_scan.
+
+    `domain` is the verified site domain from the DB — no raw URL parsing.
+    Returns the raw report dict. The caller persists ScanResult and writes
+    the completed audit after the DB flush.
+
+    Raises AppError subclasses on security violations.
+    """
+    clean_domain = domain.strip().lower()
+
+    # ── Step 2: Do Not Scan — before any DNS resolution ──────────────────────
+    dns_row = await db.execute(
+        select(DoNotScan).where(func.lower(DoNotScan.domain) == clean_domain)
+    )
+    if dns_row.scalar_one_or_none() is not None:
+        await log_event(
+            db,
+            action="scan.owner.blocked_do_not_scan",
+            outcome="blocked",
+            actor_id=actor_id,
+            actor_role=actor_role,
+            resource_type="site",
+            resource_id=site_id,
+            details={"reason": "do_not_scan"},
+        )
+        raise DomainBlockedError()
+
+    # ── Step 3: URL validation / SSRF (DNS resolution happens here) ───────────
+    clean_url = validate_url(f"https://{clean_domain}")
+
+    # ── Step 4: Extract validated hostname — guard if empty ───────────────────
+    validated_hostname = urlparse(clean_url).hostname or ""
+    if not validated_hostname:
+        raise URLValidationError(
+            message="validate_url returned URL with no extractable hostname"
+        )
+
+    # ── Step 4b: Second Do Not Scan — only if hostname changed after DNS ───────
+    if validated_hostname != clean_domain:
+        dns_row2 = await db.execute(
+            select(DoNotScan).where(
+                func.lower(DoNotScan.domain) == validated_hostname.lower()
+            )
+        )
+        if dns_row2.scalar_one_or_none() is not None:
+            await log_event(
+                db,
+                action="scan.owner.blocked_do_not_scan",
+                outcome="blocked",
+                actor_id=actor_id,
+                actor_role=actor_role,
+                resource_type="domain",
+                resource_id=validated_hostname,
+                details={"reason": "do_not_scan"},
+            )
+            raise DomainBlockedError()
+
+    # ── Step 5: Scan policy check ─────────────────────────────────────────────
+    check_scan_allowed(
+        domain=clean_domain,
+        scan_type=ScanType.PUBLIC_TRUST,
+        is_on_do_not_scan_list=False,
+    )
+
+    # ── Steps 6–8: Run passive scanners, return report for caller to persist ──
+    try:
+        scan_data = await run_public_scan(validated_hostname)
+        # compute_trust_report receives site.domain (not validated_hostname)
+        # so the displayed domain matches what the owner registered.
+        report = compute_trust_report(domain, scan_data)
+    except Exception:
+        await log_event(
+            db,
+            action="scan.owner.failed",
+            outcome="error",
+            actor_id=actor_id,
+            actor_role=actor_role,
+            resource_type="site",
+            resource_id=site_id,
+        )
+        raise
+
+    return report
