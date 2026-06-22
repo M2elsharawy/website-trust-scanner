@@ -9,49 +9,25 @@ Checks:
 Header VALUES are never stored or logged — only presence is recorded.
 """
 
-import httpx
-
-from app.core.url_validator import validate_redirect_url
+from app.core.http_client import make_safe_client
 from app.scanners.result import HTTPSCheckResult
-
-_TIMEOUT = httpx.Timeout(8.0, connect=5.0)
-_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; TrustScanner/1.0; +https://trustscanner.app)"}
-
-
-def _on_redirect(request: httpx.Request) -> None:
-    """Validate each redirect destination before following."""
-    validate_redirect_url(str(request.url))
 
 
 async def check_https(domain: str) -> HTTPSCheckResult:
     result = HTTPSCheckResult()
 
-    # 1. Check HTTPS availability and HSTS
+    # 1. Check HTTPS availability and HSTS; validate every redirect hop.
     try:
-        async with httpx.AsyncClient(
-            verify=True,
-            timeout=_TIMEOUT,
-            follow_redirects=True,
-            max_redirects=5,
-            event_hooks={"request": [lambda r: _on_redirect(r)]},
-            headers=_HEADERS,
-        ) as client:
+        async with make_safe_client(follow_redirects=True, verify=True) as client:
             response = await client.get(f"https://{domain}/")
             result.available = True
             result.hsts_present = "strict-transport-security" in response.headers
-    except httpx.SSLError:
-        result.available = False
     except Exception:
         result.available = False
 
-    # 2. Check if HTTP redirects to HTTPS (single hop, no following)
+    # 2. Check if HTTP redirects to HTTPS (single hop, no following).
     try:
-        async with httpx.AsyncClient(
-            verify=False,
-            timeout=_TIMEOUT,
-            follow_redirects=False,
-            headers=_HEADERS,
-        ) as client:
+        async with make_safe_client(follow_redirects=False, verify=False) as client:
             response = await client.get(f"http://{domain}/")
             if response.is_redirect:
                 location = response.headers.get("location", "")
