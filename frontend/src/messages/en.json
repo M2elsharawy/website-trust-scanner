@@ -266,5 +266,15 @@
     "not_found": "Scan not found.",
     "error": "Could not load this scan. Please try again.",
     "unauthorized": "Please log in to view this scan."
+  },
+  "owner_sites": {
+    "title": "My Sites",
+    "unauthorized": "Please log in to view your sites.",
+    "error": "Could not load your sites. Please try again.",
+    "empty": "No sites added yet.",
+    "status_active": "Active",
+    "status_pending": "Pending Verification",
+    "status_suspended": "Suspended",
+    "view_scans": "View Scans"
   }
 }
