@@ -38,7 +38,7 @@ export default function ScanDetailPage() {
     async function load() {
       try {
         const res = await fetch(
-          `${BACKEND}/api/v1/sites/${siteId}/scans/${scanId}`,
+          `${BACKEND}/api/v1/sites/${encodeURIComponent(siteId)}/scans/${encodeURIComponent(scanId)}`,
           { credentials: 'include' },
         )
         if (res.status === 401 || res.status === 403) { setStatus('unauthorized'); return }
@@ -76,7 +76,7 @@ export default function ScanDetailPage() {
   }
 
   const { trust_level, checks } = scan.result_json
-  const colors = LEVEL_COLORS[trust_level]
+  const colors = LEVEL_COLORS[trust_level] ?? LEVEL_COLORS['medium']
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
