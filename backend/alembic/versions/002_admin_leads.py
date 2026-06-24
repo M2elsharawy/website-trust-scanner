@@ -27,15 +27,13 @@ _LEAD_STATUSES = (
 
 
 def upgrade() -> None:
-    op.execute("CREATE TYPE lead_status AS ENUM (%s)" % ", ".join(f"'{s}'" for s in _LEAD_STATUSES))
-
     op.create_table(
         "leads",
         sa.Column("id", UUID(as_uuid=True), primary_key=True),
         sa.Column("domain", sa.String(253), nullable=False, unique=True),
         sa.Column(
             "status",
-            sa.Enum(*_LEAD_STATUSES, name="lead_status", create_type=False),
+            sa.Enum(*_LEAD_STATUSES, name="lead_status"),
             nullable=False,
             server_default="new",
         ),

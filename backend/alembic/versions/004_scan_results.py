@@ -24,7 +24,6 @@ def upgrade() -> None:
             UUID(as_uuid=True),
             sa.ForeignKey("sites.id", ondelete="CASCADE"),
             nullable=False,
-            index=True,
         ),
         sa.Column("domain", sa.String(255), nullable=False),
         sa.Column("trust_score", sa.Integer(), nullable=False),
