@@ -44,20 +44,30 @@ export default async function AdminPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-xl space-y-4">
-        <div className="space-y-2">
+    <div className="min-h-screen p-6">
+      <div className="max-w-xl mx-auto space-y-6">
+
+        <div className="space-y-1">
           <h1 className="text-xl font-semibold text-slate-100">{t('title')}</h1>
           <p className="text-slate-400 text-sm">{t('subtitle')}</p>
         </div>
+
+        {/* Read-only MVP notice */}
+        <div className="rounded-lg border border-amber-800/50 bg-amber-950/30 px-4 py-3">
+          <p className="text-xs text-amber-400">{t('notice')}</p>
+        </div>
+
+        {/* Navigation */}
         <nav>
           <Link
             href="/admin/leads"
-            className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 hover:bg-slate-800 transition-colors"
           >
-            {t('view_leads')} →
+            <span className="text-sm text-slate-200">{t('view_leads')}</span>
+            <span className="text-slate-500 text-sm">→</span>
           </Link>
         </nav>
+
       </div>
     </div>
   )
