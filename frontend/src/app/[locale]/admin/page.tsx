@@ -1,64 +1,45 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
-
 const ADMIN_ROLES = new Set(['admin', 'super_admin'])
 
-type PageState = 'loading' | 'authorized' | 'error'
+export default async function AdminPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'admin' })
 
-export default function AdminPage() {
-  const params = useParams()
-  const locale = params.locale as string
-  const router = useRouter()
-  const t = useTranslations('admin')
+  const cookieStore = await cookies()
+  const token = cookieStore.get('access_token')?.value
 
-  const [state, setState] = useState<PageState>('loading')
-
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const res = await fetch(`${BACKEND}/api/v1/auth/me`, {
-          credentials: 'include',
-        })
-        if (res.status === 401 || res.status === 403) {
-          router.replace(`/${locale}/login`)
-          return
-        }
-        if (!res.ok) {
-          setState('error')
-          return
-        }
-        const user = (await res.json()) as { role: string }
-        if (!ADMIN_ROLES.has(user.role)) {
-          router.replace(`/${locale}`)
-          return
-        }
-        setState('authorized')
-      } catch {
-        setState('error')
-      }
-    }
-    checkAuth()
-  }, [locale, router])
-
-  if (state === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
+  if (!token) {
+    redirect(`/${locale}/login`)
   }
 
-  if (state === 'error') {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <p className="text-slate-400 text-sm text-center">{t('error')}</p>
-      </div>
-    )
+  let role = ''
+  try {
+    const res = await fetch(`${BACKEND}/api/v1/auth/me`, {
+      headers: { Cookie: `access_token=${token}` },
+      cache: 'no-store',
+    })
+    if (res.status === 401 || res.status === 403) {
+      redirect(`/${locale}/login`)
+    }
+    if (!res.ok) {
+      redirect(`/${locale}`)
+    }
+    ;({ role } = (await res.json()) as { role: string })
+  } catch (err) {
+    if ((err as { digest?: string }).digest?.startsWith('NEXT_REDIRECT')) throw err
+    redirect(`/${locale}`)
+  }
+
+  if (!ADMIN_ROLES.has(role)) {
+    redirect(`/${locale}`)
   }
 
   return (
