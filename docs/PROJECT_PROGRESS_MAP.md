@@ -1,7 +1,7 @@
 # Project Progress Map
 
-**Last updated:** 2026-06-22  
-**Last SHA on main:** `2726da5`
+**Last updated:** 2026-06-25  
+**Last SHA on main:** `7302643`
 
 ---
 
@@ -13,6 +13,14 @@
 | Product Roadmap page | ✅ Complete — PR #19 |
 | Owner Scan → Safe Scan Runner | ✅ Complete — PR #20 |
 | Usage Decision UX (visitor result) | ✅ Complete — PR #21 |
+| Owner Fix Plan + CopyButton | ✅ Complete — PRs #22–#33 (multiple) |
+| Admin Lead Audit → Safe Scan Runner | ✅ Complete — PR #35 |
+| Admin UI Scope docs | ✅ Complete — PR #36 |
+| Admin route protection + shell | ✅ Complete — PR #37 |
+| Admin Leads list (read-only) | ✅ Complete — PR #38 |
+| Admin Lead Detail (read-only) | ✅ Complete — PR #39 |
+| Admin MVP Closure Pass | ✅ Complete — PR #40 |
+| Owner locale navigation fix + docs polish | ✅ Complete — PR #41 |
 
 ---
 
@@ -21,19 +29,18 @@
 ### Visitor (Public)
 - Scans a URL → gets Trust Score → sees Usage Decision (4 cards, 3-state verdict)
 - No sensitive technical details exposed
-- **Status: Near MVP**
+- **Status: MVP complete**
 
 ### Site Owner
-- Can register a site, verify DNS ownership, trigger a scan
-- Scan results stored in DB with full `result_json`
-- **No frontend for owner results yet**
-- Fix Plan feature is the next required step
-- **Status: Foundation done, Fix Plan missing**
+- Can register a site, verify DNS ownership, trigger a scan, view results, view Fix Plan, copy developer instructions
+- All scans pass through Safe Scan Runner
+- **Status: MVP complete**
 
-### Admin
-- Lead creation, shallow audit, outreach report partially built
-- Not first-launch priority
-- **Status: Partial — deferred**
+### Admin (Founder)
+- Read-only MVP: view leads list and lead detail
+- Notice banner clarifies read-only scope in both languages
+- No scan trigger, no status update, no export in UI
+- **Status: Read-only MVP complete — mutations deferred**
 
 ---
 

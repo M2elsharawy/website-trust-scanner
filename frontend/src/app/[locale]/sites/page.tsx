@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -23,8 +22,6 @@ const STATUS_STYLES: Record<SiteStatus, string> = {
 }
 
 export default function SitesListPage() {
-  const params = useParams()
-  const locale = params.locale as string
   const t = useTranslations('owner_sites')
 
   const [sites, setSites] = useState<SiteItem[]>([])
@@ -91,7 +88,7 @@ export default function SitesListPage() {
                 </div>
                 {site.status === 'active' && (
                   <Link
-                    href={`/${locale}/sites/${encodeURIComponent(site.id)}/scans`}
+                    href={`/sites/${encodeURIComponent(site.id)}/scans`}
                     className="shrink-0 text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2"
                   >
                     {t('view_scans')}

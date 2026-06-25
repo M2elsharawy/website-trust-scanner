@@ -120,17 +120,15 @@ These warnings exist in the current codebase and are known to be non-breaking:
 These items must be resolved before any public or production launch:
 
 - [ ] CVE GHSA-36qx-fr4f-26g5: upgrade Next.js or apply mitigation
-- [ ] Owner Scan must be migrated to Safe Scan Runner before production
 - [ ] Production environment hardening (secrets management, HTTPS termination, rate limits)
-- [ ] Rate limiting per domain (not just per user)
+- [ ] Rate limiting per domain (not just per user — TODO noted in safe_scan_runner.py)
 - [ ] Full penetration test or security review before public access
 
 ---
 
-## Next Recommended Step
+## Completed Since This Checklist Was Written
 
-Owner MVP is closed. The suggested next milestone is:
-
-> **Migrate Owner Scan to Safe Scan Runner** — so that owner-triggered scans pass through the same security controls (Do Not Scan, SSRF, URL validation, Scan Policy, Safe HTTP Client) as public trust checks.
-
-This is the highest-priority remaining security item before any widened access.
+- [x] Owner Scan migrated to Safe Scan Runner — PR #20 (`run_owner_trust_scan` in `safe_scan_runner.py`)
+- [x] Admin Lead Audit migrated to Safe Scan Runner — PR #35
+- [x] Admin read-only MVP closed — PRs #37, #38, #39, #40
+- [x] Owner locale navigation links fixed (next/link → @/i18n/navigation) — PR #41
