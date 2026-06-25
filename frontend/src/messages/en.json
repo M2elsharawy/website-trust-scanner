@@ -280,7 +280,30 @@
   "admin": {
     "title": "Admin Area",
     "subtitle": "Internal admin tools.",
-    "error": "Could not verify access. Please try again."
+    "error": "Could not verify access. Please try again.",
+    "view_leads": "Leads"
+  },
+  "admin_leads": {
+    "title": "Leads",
+    "error": "Could not load leads. Please try again.",
+    "empty": "No leads found.",
+    "columns": {
+      "domain": "Domain",
+      "status": "Status",
+      "score": "Score",
+      "last_audit": "Last Audit",
+      "created": "Created"
+    },
+    "status": {
+      "new": "New",
+      "contacted": "Contacted",
+      "interested": "Interested",
+      "permission_requested": "Awaiting Permission",
+      "verified": "Verified",
+      "active_client": "Active Client",
+      "rejected": "Rejected",
+      "do_not_contact": "Do Not Contact"
+    }
   },
   "owner_scans_list": {
     "title": "Scan History",

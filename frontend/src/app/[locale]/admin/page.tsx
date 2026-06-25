@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
+import { Link } from '@/i18n/navigation'
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 const ADMIN_ROLES = new Set(['admin', 'super_admin'])
@@ -44,9 +45,19 @@ export default async function AdminPage({
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-xl space-y-2">
-        <h1 className="text-xl font-semibold text-slate-100">{t('title')}</h1>
-        <p className="text-slate-400 text-sm">{t('subtitle')}</p>
+      <div className="w-full max-w-xl space-y-4">
+        <div className="space-y-2">
+          <h1 className="text-xl font-semibold text-slate-100">{t('title')}</h1>
+          <p className="text-slate-400 text-sm">{t('subtitle')}</p>
+        </div>
+        <nav>
+          <Link
+            href="/admin/leads"
+            className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            {t('view_leads')} →
+          </Link>
+        </nav>
       </div>
     </div>
   )
