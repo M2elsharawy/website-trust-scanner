@@ -280,6 +280,7 @@
   "admin": {
     "title": "Admin Area",
     "subtitle": "Internal admin tools.",
+    "notice": "Read-only MVP — you can view lead information, but cannot scan, modify statuses, or export data from this interface.",
     "error": "Could not verify access. Please try again.",
     "view_leads": "Leads"
   },
