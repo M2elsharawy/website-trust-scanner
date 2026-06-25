@@ -316,8 +316,7 @@
       "last_audit": "Last Audit",
       "created": "Created",
       "updated": "Updated",
-      "notes": "Notes",
-      "added_by": "Added By"
+      "notes": "Notes"
     }
   },
   "owner_scans_list": {

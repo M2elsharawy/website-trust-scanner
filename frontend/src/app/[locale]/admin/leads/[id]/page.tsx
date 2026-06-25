@@ -15,7 +15,6 @@ interface LeadDetail {
   created_at: string
   updated_at: string
   notes: string | null
-  added_by: string | null
 }
 
 function isoToDate(iso: string | null): string {
@@ -148,7 +147,6 @@ export default async function AdminLeadDetailPage({
               <Row label={t('fields.created')} value={isoToDate(lead.created_at)} />
               <Row label={t('fields.updated')} value={isoToDate(lead.updated_at)} />
               {lead.notes && <Row label={t('fields.notes')} value={lead.notes} />}
-              {lead.added_by && <Row label={t('fields.added_by')} value={lead.added_by} />}
             </dl>
           </div>
         )}
