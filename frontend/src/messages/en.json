@@ -277,6 +277,11 @@
     "status_suspended": "Suspended",
     "view_scans": "View Scans"
   },
+  "admin": {
+    "title": "Admin Area",
+    "subtitle": "Internal admin tools.",
+    "error": "Could not verify access. Please try again."
+  },
   "owner_scans_list": {
     "title": "Scan History",
     "unauthorized": "Please log in to view scans.",

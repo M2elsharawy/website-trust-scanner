@@ -6,7 +6,7 @@ import { routing } from './i18n/routing'
 const intlMiddleware = createMiddleware(routing)
 
 // All paths under /sites require an authenticated session.
-const PROTECTED_PREFIXES = ['/sites']
+const PROTECTED_PREFIXES = ['/sites', '/admin']
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
