@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useParams, useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import FixPlan, { type FixPlanChecks } from '@/components/FixPlan'
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
@@ -27,6 +27,8 @@ const LEVEL_COLORS: Record<TrustLevel, { ring: string; text: string; bg: string 
 
 export default function ScanDetailPage() {
   const params = useParams()
+  const router = useRouter()
+  const locale = useLocale()
   const siteId = params.siteId as string
   const scanId = params.scanId as string
   const t = useTranslations()
@@ -79,8 +81,18 @@ export default function ScanDetailPage() {
   const colors = LEVEL_COLORS[trust_level] ?? LEVEL_COLORS['medium']
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen flex flex-col items-center justify-start p-6 pt-10">
       <div className="w-full max-w-xl space-y-4">
+
+        {/* Back link */}
+        <button
+          onClick={() => router.push(`/${locale}/sites/${siteId}/scans`)}
+          className="text-sm text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1"
+        >
+          ← {t('owner_scan.back_to_scans')}
+        </button>
+
+        {/* Score card */}
         <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 flex flex-col items-center gap-3">
           <div
             className={`w-24 h-24 rounded-full ring-4 ${colors.ring} ${colors.bg}
@@ -93,6 +105,11 @@ export default function ScanDetailPage() {
             {t(`home.trust_levels.${trust_level}` as Parameters<typeof t>[0])}
           </span>
         </div>
+
+        {/* Disclaimer */}
+        <p className="text-slate-600 text-xs text-center leading-relaxed px-2">
+          {t('owner_scan.disclaimer')}
+        </p>
 
         <FixPlan checks={checks} />
       </div>

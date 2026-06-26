@@ -132,3 +132,8 @@ These items must be resolved before any public or production launch:
 - [x] Admin Lead Audit migrated to Safe Scan Runner — PR #35
 - [x] Admin read-only MVP closed — PRs #37, #38, #39, #40
 - [x] Owner locale navigation links fixed (next/link → @/i18n/navigation) — PR #41
+- [x] Admin analytics dashboard added (summary stats, risk distribution, scan trends, audit log) — PR #43
+- [x] Owner scan detail: disclaimer + back navigation added
+- [x] Admin lead detail: surface-level disclaimer added
+- [x] Final MVP Closure Report written (`docs/FINAL_MVP_CLOSURE_REPORT.md`)
+- [x] All three user paths (Visitor, Owner, Admin) confirmed complete and tested via Playwright

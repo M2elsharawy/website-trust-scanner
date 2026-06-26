@@ -265,7 +265,9 @@
   "owner_scan": {
     "not_found": "Scan not found.",
     "error": "Could not load this scan. Please try again.",
-    "unauthorized": "Please log in to view this scan."
+    "unauthorized": "Please log in to view this scan.",
+    "disclaimer": "This scan checks surface-level indicators only (HTTPS, SSL, security headers, domain reputation). No penetration testing or deep scans are performed.",
+    "back_to_scans": "Back to scan history"
   },
   "owner_sites": {
     "title": "My Sites",
