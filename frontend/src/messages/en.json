@@ -45,6 +45,7 @@
       "ssl_expiry_soon": "SSL certificate expires soon"
     },
     "new_scan": "Check another website",
+    "score_based_on": "HTTPS {https} · SSL {ssl} · Headers {headers} · Reputation: {reputation}",
     "decision": {
       "title": "Usage Decision",
       "verdict": {
@@ -151,14 +152,14 @@
     "status_label": "Status",
     "note_estimates": "These percentages are planning estimates, not automated measurements.",
     "where_now_label": "Where we are now",
-    "where_now_value": "Public Trust Check is secured via the Safe Scan Runner.",
+    "where_now_value": "All three user paths are complete (visitor, owner, admin). MVP is ready for limited trial.",
     "next_step_label": "Next step",
-    "next_step_value": "Move Owner Scan to the Safe Scan Runner.",
+    "next_step_value": "Limited beta trial with real users — collect feedback.",
     "after_next_label": "After that",
-    "after_next_value": "Improve product experience: results page, report, fix plan, copy instructions, Before/After view.",
+    "after_next_value": "Before/After comparison view, periodic scan reports, and export developer task.",
     "visitor_path": {
       "title": "Visitor Flow",
-      "status": "Near ready",
+      "status": "Complete",
       "flow": [
         "Scan a URL",
         "Get a Trust Score",
@@ -168,46 +169,43 @@
       "done": [
         "URL input",
         "General indicator checks",
-        "Trust Score",
-        "Safe Scan Runner for public requests",
+        "Trust Score with explanation",
+        "Usage Decision (browse / account / payment / personal data)",
+        "Safe Scan Runner — SSRF + Do Not Scan protection",
         "No sensitive data exposed"
       ],
       "remaining": [
-        "Improve results page",
-        "Clearer recommendations",
-        "Clear decision: browse / account / payment / personal data"
+        "Before / After comparison view",
+        "Periodic scan reports for owners"
       ]
     },
     "owner_path": {
       "title": "Site Owner Flow",
-      "status": "Partially built — needs polish",
+      "status": "MVP complete",
       "flow": [
         "Add your site",
-        "Prove ownership",
-        "Get a simplified + technical report",
-        "Copy fix instructions",
-        "Export a task for your developer",
-        "Re-scan",
-        "See improvement before/after"
+        "Prove ownership via DNS TXT",
+        "Get a simplified report with Fix Plan",
+        "Copy fix instructions for your developer",
+        "Re-scan to track improvement"
       ],
       "done": [
         "Site registration",
         "DNS TXT ownership verification",
-        "Some reports",
-        "Partial scan history"
+        "Scan history",
+        "Fix Plan with copy-for-developer",
+        "Owner Scan via Safe Scan Runner",
+        "Scan detail with disclaimer + back navigation"
       ],
       "remaining": [
-        "Move Owner Scan to Safe Scan Runner",
-        "Improve fix plan",
-        "Copy fix instructions button",
-        "Export developer task",
-        "Clear Before / After view",
-        "Understandable periodic reports"
+        "Export developer task (ticket format)",
+        "Before / After comparison view",
+        "Periodic scan reports"
       ]
     },
     "admin_path": {
       "title": "Admin Flow",
-      "status": "Partially built — not first-launch priority",
+      "status": "MVP complete",
       "flow": [
         "Scan general indicators",
         "Create a Lead",
@@ -218,15 +216,16 @@
       ],
       "done": [
         "Lead creation",
-        "Shallow Lead Audit",
+        "Shallow Lead Audit via Safe Scan Runner",
         "Lead Score",
-        "Outreach report"
+        "Outreach report",
+        "Read-only admin dashboard (leads list + detail)",
+        "Analytics dashboard"
       ],
       "remaining": [
-        "Keep scan shallow before approval",
-        "Authorization record",
-        "Convert Lead to Owner/Subscription",
-        "No deep scan without Authorization Record"
+        "Authorization record before deep scan",
+        "Convert Lead to Owner/Subscription workflow",
+        "Status management UI"
       ]
     },
     "progress": {
@@ -255,6 +254,8 @@
     "no_account": "Don't have an account?",
     "has_account": "Already have an account?",
     "submitting": "Please wait…",
+    "show_password": "Show password",
+    "hide_password": "Hide password",
     "errors": {
       "invalid_credentials": "Incorrect email or password.",
       "account_locked": "Account is temporarily locked. Try again in 15 minutes.",
@@ -265,7 +266,9 @@
   "owner_scan": {
     "not_found": "Scan not found.",
     "error": "Could not load this scan. Please try again.",
-    "unauthorized": "Please log in to view this scan."
+    "unauthorized": "Please log in to view this scan.",
+    "disclaimer": "This scan checks surface-level indicators only (HTTPS, SSL, security headers, domain reputation). No penetration testing or deep scans are performed.",
+    "back_to_scans": "Back to scan history"
   },
   "owner_sites": {
     "title": "My Sites",
@@ -275,7 +278,8 @@
     "status_active": "Active",
     "status_pending": "Pending Verification",
     "status_suspended": "Suspended",
-    "view_scans": "View Scans"
+    "view_scans": "View Scans",
+    "pending_hint": "Add a DNS TXT record to verify ownership"
   },
   "admin": {
     "title": "Admin Area",
@@ -326,6 +330,7 @@
     "not_found": "Site not found.",
     "error": "Could not load scans. Please try again.",
     "empty": "No scans found for this site.",
-    "view_details": "View Details"
+    "view_details": "View Details",
+    "back_to_sites": "My Sites"
   }
 }

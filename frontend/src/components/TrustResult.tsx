@@ -107,7 +107,7 @@ export default function TrustResult({
     { key: 'browse',        verdict: getVerdict(report.recommendations.safe_to_browse,  trust_level, checks.reputation) },
     { key: 'account',       verdict: getVerdict(report.recommendations.safe_for_account, trust_level, checks.reputation) },
     { key: 'payment',       verdict: getVerdict(report.recommendations.safe_for_payment, trust_level, checks.reputation) },
-    { key: 'personal_data', verdict: getVerdict(report.recommendations.safe_for_account, trust_level, checks.reputation) },
+    { key: 'personal_data', verdict: getVerdict(report.recommendations.safe_for_payment, trust_level, checks.reputation) },
   ]
 
   const headersLabel = t('results.headers_score', {
@@ -138,6 +138,14 @@ export default function TrustResult({
           <span className={`text-lg font-semibold ${colors.text}`}>
             {t(`home.trust_levels.${report.trust_level}` as Parameters<typeof t>[0])}
           </span>
+          <p className="text-slate-500 text-xs text-center mt-1 max-w-xs leading-relaxed">
+            {t('results.score_based_on', {
+              https: report.checks.https ? '✓' : '✗',
+              ssl: report.checks.ssl_valid ? '✓' : '✗',
+              headers: `${report.checks.headers_score}/${report.checks.headers_max}`,
+              reputation: reputationLabel,
+            })}
+          </p>
         </div>
 
         {report.warnings.length > 0 && (
@@ -163,13 +171,14 @@ export default function TrustResult({
         </div>
       </div>
 
-      {/* Security indicators (secondary) */}
-      <details className="bg-slate-900 border border-slate-800 rounded-2xl shadow group">
-        <summary className="px-5 py-3 text-slate-400 text-xs uppercase tracking-wider cursor-pointer select-none list-none flex items-center justify-between">
-          <span>{t('results.checks_title')}</span>
-          <span className="text-slate-600 group-open:rotate-180 transition-transform duration-200">▾</span>
-        </summary>
-        <div className="px-5 pb-4">
+      {/* Security indicators */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow">
+        <div className="px-5 py-3 border-b border-slate-800">
+          <p className="text-slate-400 text-xs uppercase tracking-wider">
+            {t('results.checks_title')}
+          </p>
+        </div>
+        <div className="px-5 py-2 pb-4">
           <CheckRow label={t('results.checks.https')} passed={report.checks.https} />
           <CheckRow label={t('results.checks.ssl')} passed={report.checks.ssl_valid} />
           <div className="flex items-center justify-between py-2 border-b border-slate-800">
@@ -191,7 +200,7 @@ export default function TrustResult({
             </span>
           </div>
         </div>
-      </details>
+      </div>
 
       {/* Reset */}
       <div className="text-center">

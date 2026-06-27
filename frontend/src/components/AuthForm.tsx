@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 
 type Mode = 'login' | 'register'
 
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000'
+const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 function errorKey(code: string | undefined): string {
   if (code === 'INVALID_CREDENTIALS') return 'invalid_credentials'
@@ -16,13 +16,15 @@ function errorKey(code: string | undefined): string {
   return 'generic'
 }
 
-export default function AuthForm({ mode }: { mode: Mode }) {
+function AuthFormInner({ mode }: { mode: Mode }) {
   const t = useTranslations('auth')
   const locale = useLocale()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [lang, setLang] = useState(locale)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -56,7 +58,8 @@ export default function AuthForm({ mode }: { mode: Mode }) {
         return
       }
 
-      router.push(`/${locale}`)
+      const next = searchParams.get('next')
+      router.push(next ? next : `/${locale}/sites`)
       router.refresh()
     } catch {
       setError(t('errors.generic'))
@@ -89,15 +92,25 @@ export default function AuthForm({ mode }: { mode: Mode }) {
 
           <div>
             <label className="block text-sm text-slate-400 mb-1">{t('password')}</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t('password_placeholder')}
-              required
-              minLength={8}
-              className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t('password_placeholder')}
+                required
+                minLength={8}
+                className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 end-0 flex items-center px-3 text-slate-400 hover:text-slate-200"
+                aria-label={showPassword ? t('hide_password') : t('show_password')}
+              >
+                {showPassword ? '🙈' : '👁'}
+              </button>
+            </div>
           </div>
 
           {mode === 'register' && (
@@ -136,7 +149,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
         <p className="text-center text-slate-400 text-sm mt-6">
           {mode === 'login' ? t('no_account') : t('has_account')}{' '}
           <Link
-            href={`/${locale}/${altMode}`}
+            href={`/${altMode}`}
             className="text-sky-400 hover:underline"
           >
             {altMode === 'login' ? t('login') : t('register')}
@@ -144,5 +157,13 @@ export default function AuthForm({ mode }: { mode: Mode }) {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function AuthForm({ mode }: { mode: Mode }) {
+  return (
+    <Suspense>
+      <AuthFormInner mode={mode} />
+    </Suspense>
   )
 }

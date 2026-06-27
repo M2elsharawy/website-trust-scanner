@@ -135,12 +135,12 @@ export default function RoadmapPage({
   const otherLocaleLabel = tc('switch_language')
 
   const progress: Array<{ key: string; pct: number }> = [
-    { key: 'security_arch', pct: 70 },
-    { key: 'public_trust_mvp', pct: 70 },
-    { key: 'owner_mvp', pct: 45 },
-    { key: 'admin_lead_mvp', pct: 55 },
-    { key: 'fix_experience', pct: 30 },
-    { key: 'beta_ready', pct: 55 },
+    { key: 'security_arch', pct: 95 },
+    { key: 'public_trust_mvp', pct: 100 },
+    { key: 'owner_mvp', pct: 85 },
+    { key: 'admin_lead_mvp', pct: 80 },
+    { key: 'fix_experience', pct: 70 },
+    { key: 'beta_ready', pct: 75 },
   ]
 
   return (

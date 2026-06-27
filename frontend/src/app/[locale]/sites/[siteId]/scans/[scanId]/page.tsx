@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useParams, useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import FixPlan, { type FixPlanChecks } from '@/components/FixPlan'
+import LogoutButton from '@/components/LogoutButton'
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -27,9 +29,12 @@ const LEVEL_COLORS: Record<TrustLevel, { ring: string; text: string; bg: string 
 
 export default function ScanDetailPage() {
   const params = useParams()
+  const router = useRouter()
+  const locale = useLocale()
   const siteId = params.siteId as string
   const scanId = params.scanId as string
   const t = useTranslations()
+  const tc = useTranslations('common')
 
   const [scan, setScan] = useState<ScanDetail | null>(null)
   const [status, setStatus] = useState<LoadStatus>('loading')
@@ -79,23 +84,54 @@ export default function ScanDetailPage() {
   const colors = LEVEL_COLORS[trust_level] ?? LEVEL_COLORS['medium']
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-xl space-y-4">
-        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 flex flex-col items-center gap-3">
-          <div
-            className={`w-24 h-24 rounded-full ring-4 ${colors.ring} ${colors.bg}
-                        flex flex-col items-center justify-center`}
-          >
-            <span className={`text-4xl font-bold ${colors.text}`}>{scan.trust_score}</span>
-            <span className="text-slate-500 text-xs">/100</span>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
+        <Link
+          href="/sites"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white text-sm font-bold">T</span>
           </div>
-          <span className={`text-lg font-semibold ${colors.text}`}>
-            {t(`home.trust_levels.${trust_level}` as Parameters<typeof t>[0])}
-          </span>
-        </div>
+          <span className="font-semibold text-slate-100">{tc('app_name')}</span>
+        </Link>
+        <LogoutButton />
+      </header>
 
-        <FixPlan checks={checks} />
-      </div>
+      {/* Main */}
+      <main className="flex-1 flex flex-col items-center justify-start p-6 pt-8">
+        <div className="w-full max-w-xl space-y-4">
+          {/* Back link */}
+          <button
+            onClick={() => router.push(`/${locale}/sites/${siteId}/scans`)}
+            className="text-sm text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1"
+          >
+            ← {t('owner_scan.back_to_scans')}
+          </button>
+
+          {/* Score card */}
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 flex flex-col items-center gap-3">
+            <div
+              className={`w-24 h-24 rounded-full ring-4 ${colors.ring} ${colors.bg}
+                          flex flex-col items-center justify-center`}
+            >
+              <span className={`text-4xl font-bold ${colors.text}`}>{scan.trust_score}</span>
+              <span className="text-slate-500 text-xs">/100</span>
+            </div>
+            <span className={`text-lg font-semibold ${colors.text}`}>
+              {t(`home.trust_levels.${trust_level}` as Parameters<typeof t>[0])}
+            </span>
+          </div>
+
+          {/* Disclaimer */}
+          <p className="text-slate-600 text-xs text-center leading-relaxed px-2">
+            {t('owner_scan.disclaimer')}
+          </p>
+
+          <FixPlan checks={checks} />
+        </div>
+      </main>
     </div>
   )
 }
