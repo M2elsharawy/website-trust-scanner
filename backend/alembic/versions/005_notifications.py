@@ -16,10 +16,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute(
-        "CREATE TYPE notification_type AS ENUM "
-        "('score_drop', 'score_recovered', 'scan_complete', 'verification_expired')"
-    )
     op.create_table(
         "notifications",
         sa.Column("id", UUID(as_uuid=True), primary_key=True),
@@ -28,7 +24,6 @@ def upgrade() -> None:
             UUID(as_uuid=True),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
-            index=True,
         ),
         sa.Column(
             "site_id",
@@ -45,7 +40,6 @@ def upgrade() -> None:
                 "scan_complete",
                 "verification_expired",
                 name="notification_type",
-                create_type=False,
             ),
             nullable=False,
         ),

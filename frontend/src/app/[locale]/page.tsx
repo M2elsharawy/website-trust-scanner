@@ -1,12 +1,14 @@
+import { use } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import ScanForm from '@/components/ScanForm'
 
 export default function HomePage({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }) {
+  const { locale } = use(params)
   const t = useTranslations()
 
   const otherLocale = locale === 'ar' ? 'en' : 'ar'

@@ -25,7 +25,7 @@ from app.core.exceptions import (
     ScanNotAllowedError,
     SSRFBlockedError,
 )
-from app.core.safe_scan_runner import run_owner_trust_scan, run_public_trust_scan
+from app.core.safe_scan_runner import run_lead_audit_scan, run_owner_trust_scan, run_public_trust_scan
 from app.scanners.result import ScanData
 
 
@@ -589,4 +589,189 @@ def test_owner_scan_handler_does_not_call_run_public_scan_directly():
     assert not violations, (
         "owner_scans.py must not reference run_public_scan directly "
         f"— delegate to run_owner_trust_scan: {violations}"
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Lead Audit Scan tests
+# ══════════════════════════════════════════════════════════════════════════════
+
+_LEAD_KWARGS = dict(
+    domain="example.com",
+    lead_id="lead-uuid-123",
+    actor_ip="1.2.3.4",
+)
+
+
+# ── Do Not Scan blocks before URL validation ──────────────────────────────────
+
+async def test_lead_audit_do_not_scan_blocks_before_url_validation():
+    """DNS check must fire before validate_url (no DNS resolution on blocked domain)."""
+    db = _make_db(domain_blocked=True)
+
+    with (
+        patch("app.core.safe_scan_runner.validate_url") as mock_validate,
+        pytest.raises(DomainBlockedError),
+    ):
+        await run_lead_audit_scan(**_LEAD_KWARGS, db=db)
+
+    mock_validate.assert_not_called()
+
+
+async def test_lead_audit_do_not_scan_audit_uses_actor_ip_and_lead_id():
+    """Blocked audit log must carry actor_ip, resource_type=lead, resource_id=lead_id."""
+    db = _make_db(domain_blocked=True)
+    logged: list[dict] = []
+
+    async def capture_log(db, *, action, outcome, actor_ip=None,
+                          resource_type=None, resource_id=None, details=None, **kwargs):
+        logged.append({
+            "action": action,
+            "outcome": outcome,
+            "actor_ip": actor_ip,
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "details": details,
+        })
+
+    with (
+        patch("app.core.safe_scan_runner.log_event", side_effect=capture_log),
+        patch("app.core.safe_scan_runner.validate_url"),
+        pytest.raises(DomainBlockedError),
+    ):
+        await run_lead_audit_scan(**_LEAD_KWARGS, db=db)
+
+    assert len(logged) == 1
+    entry = logged[0]
+    assert entry["action"] == "scan.lead_audit.blocked_do_not_scan"
+    assert entry["outcome"] == "blocked"
+    assert entry["actor_ip"] == "1.2.3.4"
+    assert entry["resource_type"] == "lead"
+    assert entry["resource_id"] == "lead-uuid-123"
+    assert entry.get("details", {}).get("reason") == "do_not_scan"
+
+
+# ── SSRF block prevents scanner ───────────────────────────────────────────────
+
+async def test_lead_audit_ssrf_block_prevents_run_public_scan():
+    """If validate_url raises SSRFBlockedError, run_public_scan must not run."""
+    db = _make_db(domain_blocked=False)
+
+    with (
+        patch("app.core.safe_scan_runner.validate_url", side_effect=SSRFBlockedError()),
+        patch("app.core.safe_scan_runner.run_public_scan") as mock_runner,
+        pytest.raises(SSRFBlockedError),
+    ):
+        await run_lead_audit_scan(**_LEAD_KWARGS, db=db)
+
+    mock_runner.assert_not_called()
+
+
+# ── Policy deny prevents scanner ──────────────────────────────────────────────
+
+async def test_lead_audit_policy_deny_prevents_run_public_scan():
+    """If check_scan_allowed raises, run_public_scan must not run."""
+    db = _make_db(domain_blocked=False)
+
+    with (
+        patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
+        patch("app.core.safe_scan_runner.check_scan_allowed", side_effect=ScanNotAllowedError()),
+        patch("app.core.safe_scan_runner.run_public_scan") as mock_runner,
+        pytest.raises(ScanNotAllowedError),
+    ):
+        await run_lead_audit_scan(**_LEAD_KWARGS, db=db)
+
+    mock_runner.assert_not_called()
+
+
+# ── Successful scan uses validated_hostname ───────────────────────────────────
+
+async def test_lead_audit_scan_uses_validated_hostname():
+    """run_public_scan must receive the hostname from validate_url, not raw domain."""
+    db = _make_db(domain_blocked=False)
+    scan_data = _make_scan_data()
+    captured: list[str] = []
+
+    async def capture_domain(domain: str) -> ScanData:
+        captured.append(domain)
+        return scan_data
+
+    with (
+        patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
+        patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner.run_public_scan", side_effect=capture_domain),
+        patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
+    ):
+        result = await run_lead_audit_scan(**_LEAD_KWARGS, db=db)
+
+    assert captured == ["example.com"]
+    assert result.domain == "example.com"
+
+
+# ── Failed audit on scanner error ─────────────────────────────────────────────
+
+async def test_lead_audit_failed_audit_written_on_scanner_error():
+    """If run_public_scan raises, audit must record scan.lead_audit.failed."""
+    db = _make_db(domain_blocked=False)
+    logged: list[dict] = []
+
+    async def capture_log(db, *, action, outcome, **kwargs):
+        logged.append({"action": action, "outcome": outcome})
+
+    with (
+        patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
+        patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner.run_public_scan", side_effect=RuntimeError("timeout")),
+        patch("app.core.safe_scan_runner.log_event", side_effect=capture_log),
+        pytest.raises(RuntimeError),
+    ):
+        await run_lead_audit_scan(**_LEAD_KWARGS, db=db)
+
+    assert any(e["action"] == "scan.lead_audit.failed" for e in logged)
+
+
+# ── Static analysis: leads.py must not call run_public_scan directly ──────────
+
+def test_lead_audit_handler_does_not_call_run_public_scan_directly():
+    """
+    admin/leads.py must not import run_public_scan from app.scanners.runner
+    or call it directly — all scan logic must go through run_lead_audit_scan.
+    """
+    handler_file = (
+        Path(__file__).resolve().parent.parent.parent
+        / "app" / "api" / "v1" / "admin" / "leads.py"
+    )
+    text = handler_file.read_text()
+    tree = ast.parse(text, filename=str(handler_file))
+
+    violations: list[str] = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if "scanners.runner" in module:
+                imported = [a.name for a in node.names]
+                if "run_public_scan" in imported:
+                    violations.append(
+                        f"line {node.lineno}: imports run_public_scan from {module}"
+                    )
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if "scanners.runner" in alias.name:
+                    violations.append(
+                        f"line {node.lineno}: imports scanner runner: {alias.name}"
+                    )
+        if isinstance(node, ast.Call):
+            fn = node.func
+            if isinstance(fn, ast.Name) and fn.id == "run_public_scan":
+                violations.append(f"line {fn.col_offset}: calls run_public_scan() directly")
+            elif isinstance(fn, ast.Attribute) and fn.attr == "run_public_scan":
+                violations.append("calls .run_public_scan() via attribute")
+
+    if re.search(r"app\.scanners\.runner", text):
+        violations.append("string 'app.scanners.runner' found in leads.py")
+
+    assert not violations, (
+        "admin/leads.py must not reference run_public_scan directly "
+        f"— delegate to run_lead_audit_scan: {violations}"
     )

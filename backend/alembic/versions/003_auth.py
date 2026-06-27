@@ -16,12 +16,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # user_role enum
-    op.execute(
-        "CREATE TYPE user_role AS ENUM "
-        "('free_user', 'verified_owner', 'agency', 'admin', 'super_admin')"
-    )
-
     op.create_table(
         "users",
         sa.Column("id", UUID(as_uuid=True), primary_key=True),
@@ -36,7 +30,6 @@ def upgrade() -> None:
                 "admin",
                 "super_admin",
                 name="user_role",
-                create_type=False,
             ),
             nullable=False,
             server_default="free_user",
@@ -69,7 +62,6 @@ def upgrade() -> None:
             UUID(as_uuid=True),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
-            index=True,
         ),
         sa.Column("token_hash", sa.String(64), nullable=False, unique=True),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
@@ -89,11 +81,6 @@ def upgrade() -> None:
         "ix_refresh_tokens_token_hash", "refresh_tokens", ["token_hash"], unique=True
     )
 
-    # site_status enum
-    op.execute(
-        "CREATE TYPE site_status AS ENUM ('pending', 'active', 'suspended')"
-    )
-
     op.create_table(
         "sites",
         sa.Column("id", UUID(as_uuid=True), primary_key=True),
@@ -102,7 +89,6 @@ def upgrade() -> None:
             UUID(as_uuid=True),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
-            index=True,
         ),
         sa.Column("domain", sa.String(255), nullable=False),
         sa.Column(
@@ -112,7 +98,6 @@ def upgrade() -> None:
                 "active",
                 "suspended",
                 name="site_status",
-                create_type=False,
             ),
             nullable=False,
             server_default="pending",

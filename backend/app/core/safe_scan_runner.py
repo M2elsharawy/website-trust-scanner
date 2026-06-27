@@ -27,6 +27,7 @@ from app.core.exceptions import DomainBlockedError, URLValidationError
 from app.core.scan_policy import ScanType, check_scan_allowed
 from app.core.url_validator import validate_url
 from app.models.do_not_scan import DoNotScan
+from app.scanners.result import ScanData
 from app.scanners.runner import run_public_scan
 from app.scanners.trust_score import compute_trust_report
 from app.schemas.scan import TrustReport
@@ -246,3 +247,91 @@ async def run_owner_trust_scan(
         raise
 
     return report
+
+
+async def run_lead_audit_scan(
+    *,
+    domain: str,
+    lead_id: str,
+    actor_ip: str | None,
+    db: AsyncSession,
+) -> ScanData:
+    """
+    Execute a surface-level Lead Audit scan with the same mandatory security
+    order as run_owner_trust_scan.
+
+    `domain` is the pre-validated domain from the leads DB record.
+    Returns raw ScanData. The caller computes lead_score, generates outreach,
+    and writes the completed audit log.
+
+    Raises AppError subclasses on security violations.
+    """
+    clean_domain = domain.strip().lower()
+
+    # ── Step 2: Do Not Scan — before any DNS resolution ──────────────────────
+    dns_row = await db.execute(
+        select(DoNotScan).where(func.lower(DoNotScan.domain) == clean_domain)
+    )
+    if dns_row.scalar_one_or_none() is not None:
+        await log_event(
+            db,
+            action="scan.lead_audit.blocked_do_not_scan",
+            outcome="blocked",
+            actor_ip=actor_ip,
+            resource_type="lead",
+            resource_id=lead_id,
+            details={"reason": "do_not_scan"},
+        )
+        raise DomainBlockedError()
+
+    # ── Step 3: URL validation / SSRF (DNS resolution happens here) ───────────
+    clean_url = validate_url(f"https://{clean_domain}")
+
+    # ── Step 4: Extract validated hostname — guard if empty ───────────────────
+    validated_hostname = urlparse(clean_url).hostname or ""
+    if not validated_hostname:
+        raise URLValidationError(
+            message="validate_url returned URL with no extractable hostname"
+        )
+
+    # ── Step 4b: Second Do Not Scan — only if hostname changed after DNS ───────
+    if validated_hostname != clean_domain:
+        dns_row2 = await db.execute(
+            select(DoNotScan).where(
+                func.lower(DoNotScan.domain) == validated_hostname.lower()
+            )
+        )
+        if dns_row2.scalar_one_or_none() is not None:
+            await log_event(
+                db,
+                action="scan.lead_audit.blocked_do_not_scan",
+                outcome="blocked",
+                actor_ip=actor_ip,
+                resource_type="lead",
+                resource_id=lead_id,
+                details={"reason": "do_not_scan"},
+            )
+            raise DomainBlockedError()
+
+    # ── Step 5: Scan policy check ─────────────────────────────────────────────
+    check_scan_allowed(
+        domain=clean_domain,
+        scan_type=ScanType.PUBLIC_TRUST,
+        is_on_do_not_scan_list=False,
+    )
+
+    # ── Steps 6–8: Run passive scanners, return ScanData for caller to process ─
+    try:
+        scan_data = await run_public_scan(validated_hostname)
+    except Exception:
+        await log_event(
+            db,
+            action="scan.lead_audit.failed",
+            outcome="error",
+            actor_ip=actor_ip,
+            resource_type="lead",
+            resource_id=lead_id,
+        )
+        raise
+
+    return scan_data

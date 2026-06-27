@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.admin.auth import require_admin
 from app.core.exceptions import DomainBlockedError
+from app.core.safe_scan_runner import run_lead_audit_scan
 from app.core.url_validator import validate_url
 from app.db.session import get_db
 from app.models.do_not_scan import DoNotScan
@@ -30,7 +31,6 @@ from app.models.lead import (
 )
 from app.scanners.lead_score import compute_lead_score, score_to_opportunity_level
 from app.scanners.outreach import generate_outreach
-from app.scanners.runner import run_public_scan
 from app.schemas.lead import (
     LeadCreate,
     LeadDetail,
@@ -206,7 +206,12 @@ async def run_lead_audit(
         )
 
     # Run the same surface-level checkers as public trust scan
-    scan_data = await run_public_scan(lead.domain)
+    scan_data = await run_lead_audit_scan(
+        domain=lead.domain,
+        lead_id=str(lead.id),
+        actor_ip=actor_ip,
+        db=db,
+    )
 
     # Compute Lead Score (business opportunity, not security grade)
     lead_score = compute_lead_score(scan_data)

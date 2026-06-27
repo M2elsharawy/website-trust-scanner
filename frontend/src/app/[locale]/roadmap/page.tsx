@@ -1,13 +1,15 @@
+import { use } from 'react'
 import type { Metadata } from 'next'
 import { useTranslations } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }): Promise<Metadata> {
+  const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'roadmap' })
   return { title: t('page_title') }
 }
@@ -120,10 +122,11 @@ function PathCard({
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function RoadmapPage({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }) {
+  const { locale } = use(params)
   const t = useTranslations('roadmap')
   const tc = useTranslations('common')
   const tf = useTranslations('footer')

@@ -261,5 +261,71 @@
       "email_taken": "An account with this email already exists.",
       "generic": "Something went wrong. Please try again."
     }
+  },
+  "owner_scan": {
+    "not_found": "Scan not found.",
+    "error": "Could not load this scan. Please try again.",
+    "unauthorized": "Please log in to view this scan."
+  },
+  "owner_sites": {
+    "title": "My Sites",
+    "unauthorized": "Please log in to view your sites.",
+    "error": "Could not load your sites. Please try again.",
+    "empty": "No sites added yet.",
+    "status_active": "Active",
+    "status_pending": "Pending Verification",
+    "status_suspended": "Suspended",
+    "view_scans": "View Scans"
+  },
+  "admin": {
+    "title": "Admin Area",
+    "subtitle": "Internal admin tools.",
+    "notice": "Read-only MVP — you can view lead information, but cannot scan, modify statuses, or export data from this interface.",
+    "error": "Could not verify access. Please try again.",
+    "view_leads": "Leads"
+  },
+  "admin_leads": {
+    "title": "Leads",
+    "error": "Could not load leads. Please try again.",
+    "empty": "No leads found.",
+    "columns": {
+      "domain": "Domain",
+      "status": "Status",
+      "score": "Score",
+      "last_audit": "Last Audit",
+      "created": "Created"
+    },
+    "status": {
+      "new": "New",
+      "contacted": "Contacted",
+      "interested": "Interested",
+      "permission_requested": "Awaiting Permission",
+      "verified": "Verified",
+      "active_client": "Active Client",
+      "rejected": "Rejected",
+      "do_not_contact": "Do Not Contact"
+    }
+  },
+  "admin_lead_detail": {
+    "title": "Lead Detail",
+    "not_found": "Lead not found.",
+    "error": "Could not load lead. Please try again.",
+    "fields": {
+      "domain": "Domain",
+      "status": "Status",
+      "score": "Score",
+      "last_audit": "Last Audit",
+      "created": "Created",
+      "updated": "Updated",
+      "notes": "Notes"
+    }
+  },
+  "owner_scans_list": {
+    "title": "Scan History",
+    "unauthorized": "Please log in to view scans.",
+    "not_found": "Site not found.",
+    "error": "Could not load scans. Please try again.",
+    "empty": "No scans found for this site.",
+    "view_details": "View Details"
   }
 }

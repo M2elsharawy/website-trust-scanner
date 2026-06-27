@@ -4,30 +4,22 @@ Celery periodic task: re-scan all verified sites once every 24 hours.
 Compares new score to the most recent stored score and fires notifications
 if the drop is >= 10 points or if there's a recovery.
 
-Every scan passes through the URL validator and scan policy engine before
-any outbound HTTP request is made.  Do Not Scan domains are blocked
-unconditionally — the scheduler has no override capability.
+All security enforcement (Do Not Scan, SSRF, URL validation, scan policy)
+is delegated to run_owner_trust_scan — the scheduler has no override capability.
 """
 
 import asyncio
 import logging
-from urllib.parse import urlparse
 
 from celery import Celery
 from celery.schedules import crontab
-from sqlalchemy import func, desc, select
+from sqlalchemy import desc, select
 
 from app.core.config import settings
-from app.core.exceptions import AppError, URLValidationError
-from app.core.scan_policy import ScanType, check_scan_allowed
-from app.core.url_validator import validate_url
+from app.core.safe_scan_runner import run_owner_trust_scan
 from app.db.session import AsyncSessionFactory
-from app.models.do_not_scan import DoNotScan
 from app.models.scan_result import ScanResult
 from app.models.site import Site, SiteStatus
-from app.scanners.runner import run_public_scan
-from app.scanners.trust_score import compute_trust_report
-from app.services.audit_logger import log_event
 from app.services.notification_service import (
     notify_scan_complete,
     notify_score_drop,
@@ -80,41 +72,7 @@ async def _async_rescan_all() -> dict:
 
 
 async def _rescan_site(db, site: Site) -> None:
-    # 1. Do Not Scan check — before any DNS resolution, no scheduler override
-    dns_row = await db.execute(
-        select(DoNotScan).where(
-            func.lower(DoNotScan.domain) == site.domain.lower()
-        )
-    )
-    if dns_row.scalar_one_or_none() is not None:
-        await log_event(
-            db,
-            action="scheduled_scan.blocked_do_not_scan",
-            outcome="blocked",
-            resource_type="site",
-            resource_id=str(site.id),
-            details={"domain": site.domain},
-        )
-        raise AppError(
-            status_code=403,
-            error_code="DOMAIN_BLOCKED",
-            message=f"Domain '{site.domain}' is on the Do Not Scan list",
-        )
-
-    # 2. URL validation — SSRF safety check (involves DNS resolution)
-    _clean_url = validate_url(f"https://{site.domain}")
-    _validated_domain = urlparse(_clean_url).hostname
-    if not _validated_domain:
-        raise URLValidationError(message="validate_url returned URL with no extractable hostname")
-
-    # 3. Scan policy check — PUBLIC_TRUST only (no Authorization Record required)
-    check_scan_allowed(
-        domain=site.domain,
-        scan_type=ScanType.PUBLIC_TRUST,
-        is_on_do_not_scan_list=False,
-    )
-
-    # Get previous score
+    # Get previous score before running the new scan
     prev_result = await db.execute(
         select(ScanResult)
         .where(ScanResult.site_id == site.id)
@@ -124,12 +82,17 @@ async def _rescan_site(db, site: Site) -> None:
     prev = prev_result.scalar_one_or_none()
     prev_score = prev.trust_score if prev else None
 
-    # Run new scan
-    scan_data = await run_public_scan(_validated_domain)
-    report = compute_trust_report(site.domain, scan_data)
+    # All security checks (Do Not Scan, SSRF, URL validation, scan policy)
+    # are enforced inside run_owner_trust_scan — no scheduler override possible.
+    report = await run_owner_trust_scan(
+        domain=site.domain,
+        actor_id="scheduler",
+        actor_role="system",
+        site_id=str(site.id),
+        db=db,
+    )
     new_score = report["trust_score"]
 
-    # Persist result
     new_result = ScanResult(
         site_id=site.id,
         domain=site.domain,
@@ -139,7 +102,6 @@ async def _rescan_site(db, site: Site) -> None:
     db.add(new_result)
     await db.flush()
 
-    # Notifications
     await notify_scan_complete(
         db, user_id=site.owner_id, site_id=site.id,
         domain=site.domain, score=new_score,
