@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import FixPlan, { type FixPlanChecks } from '@/components/FixPlan'
+import BrandLogo from '@/components/BrandLogo'
 import LogoutButton from '@/components/LogoutButton'
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
@@ -20,11 +21,11 @@ interface ScanDetail {
   }
 }
 
-const LEVEL_COLORS: Record<TrustLevel, { ring: string; text: string; bg: string }> = {
-  high:   { ring: 'ring-emerald-500', text: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-  good:   { ring: 'ring-blue-500',    text: 'text-blue-400',    bg: 'bg-blue-500/10'    },
-  medium: { ring: 'ring-amber-500',   text: 'text-amber-400',   bg: 'bg-amber-500/10'   },
-  low:    { ring: 'ring-red-500',     text: 'text-red-400',     bg: 'bg-red-500/10'     },
+const LEVEL_COLORS: Record<TrustLevel, { ring: string; text: string; bg: string; badge: string }> = {
+  high:   { ring: 'ring-emerald-500', text: 'text-emerald-400', bg: 'bg-emerald-500/10', badge: 'bg-emerald-950/50 text-emerald-400 border-emerald-800/60' },
+  good:   { ring: 'ring-blue-500',    text: 'text-blue-400',    bg: 'bg-blue-500/10',    badge: 'bg-blue-950/50 text-blue-400 border-blue-800/60'          },
+  medium: { ring: 'ring-amber-500',   text: 'text-amber-400',   bg: 'bg-amber-500/10',   badge: 'bg-amber-950/50 text-amber-400 border-amber-800/60'       },
+  low:    { ring: 'ring-red-500',     text: 'text-red-400',     bg: 'bg-red-500/10',     badge: 'bg-red-950/50 text-red-400 border-red-800/60'             },
 }
 
 export default function ScanDetailPage() {
@@ -34,7 +35,6 @@ export default function ScanDetailPage() {
   const siteId = params.siteId as string
   const scanId = params.scanId as string
   const t = useTranslations()
-  const tc = useTranslations('common')
 
   const [scan, setScan] = useState<ScanDetail | null>(null)
   const [status, setStatus] = useState<LoadStatus>('loading')
@@ -85,41 +85,31 @@ export default function ScanDetailPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
       <header className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
-        <Link
-          href="/sites"
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-        >
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white text-sm font-bold">T</span>
-          </div>
-          <span className="font-semibold text-slate-100">{tc('app_name')}</span>
-        </Link>
+        <BrandLogo href="/sites" />
         <LogoutButton />
       </header>
 
-      {/* Main */}
       <main className="flex-1 flex flex-col items-center justify-start p-6 pt-8">
         <div className="w-full max-w-xl space-y-4">
           {/* Back link */}
           <button
             onClick={() => router.push(`/${locale}/sites/${siteId}/scans`)}
-            className="text-sm text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1"
+            className="text-sm text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
           >
             ← {t('owner_scan.back_to_scans')}
           </button>
 
           {/* Score card */}
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 flex flex-col items-center gap-3">
+          <div className="bg-slate-900 border border-slate-700/80 rounded-2xl p-6 flex flex-col items-center gap-4 shadow-2xl shadow-black/30">
             <div
-              className={`w-24 h-24 rounded-full ring-4 ${colors.ring} ${colors.bg}
+              className={`w-28 h-28 rounded-full ring-4 ring-offset-2 ring-offset-slate-900 ${colors.ring} ${colors.bg}
                           flex flex-col items-center justify-center`}
             >
-              <span className={`text-4xl font-bold ${colors.text}`}>{scan.trust_score}</span>
-              <span className="text-slate-500 text-xs">/100</span>
+              <span className={`text-4xl font-bold tabular-nums ${colors.text}`}>{scan.trust_score}</span>
+              <span className="text-slate-500 text-xs mt-0.5">/100</span>
             </div>
-            <span className={`text-lg font-semibold ${colors.text}`}>
+            <span className={`inline-flex items-center px-3 py-1 rounded-full border text-sm font-semibold ${colors.badge}`}>
               {t(`home.trust_levels.${trust_level}` as Parameters<typeof t>[0])}
             </span>
           </div>

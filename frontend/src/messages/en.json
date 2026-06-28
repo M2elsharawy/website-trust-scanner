@@ -141,7 +141,17 @@
   },
   "footer": {
     "tagline": "Safe Scan • Non-Intrusive • Trustworthy",
-    "roadmap_link": "Product Roadmap"
+    "roadmap_link": "Roadmap",
+    "terms_link": "Terms",
+    "privacy_link": "Privacy"
+  },
+  "terms": {
+    "page_title": "Terms of Service",
+    "coming_soon": "Full terms of service will be published before the public launch of this product."
+  },
+  "privacy": {
+    "page_title": "Privacy Policy",
+    "coming_soon": "The full privacy policy will be published before the public launch of this product."
   },
   "roadmap": {
     "page_title": "Product Roadmap",
