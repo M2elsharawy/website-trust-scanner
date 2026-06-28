@@ -1,7 +1,7 @@
 # Project Progress Map
 
-**Last updated:** 2026-06-25  
-**Last SHA on main:** `7302643`
+**Last updated:** 2026-06-28  
+**Last SHA on main:** `a8549cc`
 
 ---
 
@@ -21,6 +21,8 @@
 | Admin Lead Detail (read-only) | ✅ Complete — PR #39 |
 | Admin MVP Closure Pass | ✅ Complete — PR #40 |
 | Owner locale navigation fix + docs polish | ✅ Complete — PR #41 |
+| Admin analytics dashboard (summary, scan trends, audit log) | ✅ Complete — PR #43 |
+| UX polish: LogoutButton, FixPlan fix, open redirect fix, score explanation | ✅ Complete — PR #45 |
 
 ---
 
@@ -28,19 +30,21 @@
 
 ### Visitor (Public)
 - Scans a URL → gets Trust Score → sees Usage Decision (4 cards, 3-state verdict)
+- Advisory results only — surface-level indicators, not a security certification
 - No sensitive technical details exposed
-- **Status: MVP complete**
+- **Status: MVP Feature Complete**
 
 ### Site Owner
 - Can register a site, verify DNS ownership, trigger a scan, view results, view Fix Plan, copy developer instructions
 - All scans pass through Safe Scan Runner
-- **Status: MVP complete**
+- **Status: MVP Feature Complete**
 
 ### Admin (Founder)
-- Read-only MVP: view leads list and lead detail
+- Read-only MVP: view leads list, lead detail, analytics dashboard
+- Analytics: summary stats, 30-day scan trend chart, audit log (action/outcome/role/type/time)
 - Notice banner clarifies read-only scope in both languages
 - No scan trigger, no status update, no export in UI
-- **Status: Read-only MVP complete — mutations deferred**
+- **Status: Read-only MVP Feature Complete — mutations deferred**
 
 ---
 
@@ -52,6 +56,11 @@
 | #19 | Product Roadmap page | `3825518` | Squash merged |
 | #20 | Owner Scan → Safe Scan Runner | `d8d8896` | Squash merged |
 | #21 | Usage Decision UX for visitor result | `2726da5` | Squash merged |
+| #22–#33 | Owner Fix Plan + CopyButton | various | Squash merged |
+| #35 | Admin Lead Audit → Safe Scan Runner | — | Squash merged |
+| #36–#41 | Admin UI MVP (route guard, leads, detail, closure, locale fix) | various | Squash merged |
+| #43 | Admin analytics dashboard | `9e28101` | Squash merged |
+| #45 | UX polish + open redirect fix | `a8549cc` | Squash merged |
 
 ---
 

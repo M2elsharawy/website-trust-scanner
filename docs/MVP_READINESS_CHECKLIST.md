@@ -1,8 +1,8 @@
 # MVP Readiness Checklist
 
-**Date:** 2026-06-24
-**Scope:** Owner MVP — initial verified flow for site owners
-**Status:** ✅ Verified — ready for supervised beta testing
+**Date:** 2026-06-28
+**Scope:** Full MVP — all three user paths (visitor, owner, admin)
+**Status:** ✅ MVP Feature Complete — ready for supervised limited trial (see FINAL_MVP_CLOSURE_REPORT.md for pre-launch blockers)
 
 ---
 
@@ -132,3 +132,11 @@ These items must be resolved before any public or production launch:
 - [x] Admin Lead Audit migrated to Safe Scan Runner — PR #35
 - [x] Admin read-only MVP closed — PRs #37, #38, #39, #40
 - [x] Owner locale navigation links fixed (next/link → @/i18n/navigation) — PR #41
+- [x] Admin analytics dashboard (summary, scan trends, audit log) — PR #43
+- [x] LogoutButton with locale-aware redirect — PR #45
+- [x] Open redirect in `?next=` parameter fixed — PR #45
+- [x] FixPlan `'use client'` directive added — PR #45
+- [x] TrustResult personal_data verdict signal corrected — PR #45
+- [x] Password show/hide toggle in AuthForm — PR #45
+- [x] Back-navigation and disclaimer on owner scan detail — PR #45
+- [x] Full MVP Closure Report created — docs/FINAL_MVP_CLOSURE_REPORT.md
