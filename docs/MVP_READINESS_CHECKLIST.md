@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-28
 **Scope:** Full MVP — all three user paths (visitor, owner, admin)
-**Status:** ✅ MVP complete — ready for supervised beta testing (see FINAL_MVP_CLOSURE_REPORT.md for pre-launch blockers)
+**Status:** ✅ MVP Feature Complete — ready for supervised limited trial (see FINAL_MVP_CLOSURE_REPORT.md for pre-launch blockers)
 
 ---
 

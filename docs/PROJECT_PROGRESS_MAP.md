@@ -30,20 +30,21 @@
 
 ### Visitor (Public)
 - Scans a URL → gets Trust Score → sees Usage Decision (4 cards, 3-state verdict)
+- Advisory results only — surface-level indicators, not a security certification
 - No sensitive technical details exposed
-- **Status: MVP complete**
+- **Status: MVP Feature Complete**
 
 ### Site Owner
 - Can register a site, verify DNS ownership, trigger a scan, view results, view Fix Plan, copy developer instructions
 - All scans pass through Safe Scan Runner
-- **Status: MVP complete**
+- **Status: MVP Feature Complete**
 
 ### Admin (Founder)
 - Read-only MVP: view leads list, lead detail, analytics dashboard
 - Analytics: summary stats, 30-day scan trend chart, audit log (action/outcome/role/type/time)
 - Notice banner clarifies read-only scope in both languages
 - No scan trigger, no status update, no export in UI
-- **Status: Read-only MVP complete — mutations deferred**
+- **Status: Read-only MVP Feature Complete — mutations deferred**
 
 ---
 

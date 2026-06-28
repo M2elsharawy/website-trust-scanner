@@ -7,6 +7,18 @@
 
 ---
 
+## Product Guardrails
+
+This project is a **Trust Advisor**, not a scanner. The following constraints are permanent and apply to every scan, feature, and API endpoint.
+
+- **Advisory only.** Results are surface-level indicators (HTTPS, SSL certificate validity, security headers, domain reputation). The tool does not guarantee that a website is safe, and outputs must not be treated as a security certification.
+- **Not a replacement for professional testing.** This tool does not perform penetration testing, vulnerability assessment, or any form of intrusive analysis. A professional penetration test is required before drawing security conclusions about a target.
+- **No offensive tools in Admin.** The Admin interface has no scan trigger, no bulk scan, no attack-simulation capability, and no features that can be used offensively against third-party domains.
+- **Deep scan requires ownership proof + authorization.** Any scan beyond surface indicators requires verified site ownership (DNS TXT record) and an explicit authorization record before activation. No deep scan may be triggered without both.
+- **Pipeline is mandatory for every outbound request.** Regardless of trigger source, every scan must traverse in order: Do Not Scan check (before any DNS resolution) → SSRF protection → URL validation → Scan Policy → Safe HTTP Client. Safe Scan Runner orchestrates this pipeline and must not be bypassed.
+
+---
+
 ## 1. Visitor (Public) Path — Status
 
 **Complete.**
@@ -28,7 +40,7 @@ No raw technical data (headers, IPs, response bodies, secrets) is exposed in the
 
 ## 2. Site Owner Path — Status
 
-**MVP complete.**
+**MVP Feature Complete.**
 
 Verified end-to-end flow:
 
@@ -49,7 +61,7 @@ Pending verification hint shown for unverified sites. Back-navigation and discla
 
 ## 3. Founder / Admin Path — Status
 
-**Read-only MVP complete.**
+**Read-only MVP Feature Complete.**
 
 | Capability | Status |
 |---|---|
@@ -134,12 +146,13 @@ The following are permanently prohibited unless the scope is explicitly expanded
 | PDF report generation | Post-MVP |
 | Per-domain rate limiting | TODO noted in `safe_scan_runner.py` — pre-launch blocker |
 | Next.js CVE GHSA-36qx-fr4f-26g5 mitigation | Pre-public-launch blocker (see §9) |
+| External Reputation Provider integration | Current implementation uses a mock/stub reputation check. A real provider (e.g. Google Safe Browsing, VirusTotal, or equivalent) must be integrated before production use. |
 
 ---
 
-## 7. Is the Project Ready for Limited Trial?
+## 7. Is the Project Ready for Supervised Limited Trial?
 
-**Yes — with supervision.**
+**Yes — ready for supervised limited trial.**
 
 All three user paths (visitor, owner, admin) work end-to-end. The security pipeline is complete. No raw data is exposed. Locale support (Arabic, English) is verified.
 
@@ -276,14 +289,14 @@ Run this checklist in the staging environment before inviting any trial users.
 | Question | Answer |
 |---|---|
 | **Visitor path complete?** | Yes — Trust Score, Usage Decision (4 cards × 3 verdicts), no sensitive data exposed |
-| **Owner path complete?** | Yes — registration, DNS verification, scan, history, Fix Plan, copy-for-developer, re-scan |
-| **Admin path complete?** | Read-only MVP yes — leads list, lead detail, analytics, audit log; mutations deferred |
-| **What was built?** | Full three-path MVP: 45 PRs, complete Safe Scan Runner pipeline, bilingual UI (AR/EN) |
+| **Owner path complete?** | MVP Feature Complete — registration, DNS verification, scan, history, Fix Plan, copy-for-developer, re-scan |
+| **Admin path complete?** | Read-only MVP Feature Complete — leads list, lead detail, analytics, audit log; mutations deferred |
+| **What was built?** | Full three-path advisory tool: 45 PRs, complete Safe Scan Runner pipeline, bilingual UI (AR/EN) |
 | **What is forbidden?** | Port scan, crawl, intrusive test, raw data exposure, actor IP in UI, admin scan trigger, bulk scan |
-| **What is deferred?** | Before/After comparison, scheduled reports, admin mutations, export, deep scan authorization gate |
-| **Ready for limited trial?** | Yes — with HTTPS, real secrets, and a known user list |
-| **Ready for public launch?** | No — CVE GHSA-36qx-fr4f-26g5 and per-domain rate limiting must be resolved first |
-| **Biggest security risk?** | Next.js CVE (i18n bypass) + missing per-domain rate limit |
+| **What is deferred?** | Before/After comparison, scheduled reports, admin mutations, export, deep scan authorization gate, real reputation provider |
+| **Ready for supervised limited trial?** | Yes — with HTTPS, real secrets, and a known user list |
+| **Ready for public launch?** | No — CVE GHSA-36qx-fr4f-26g5, per-domain rate limiting, and real reputation provider must be resolved first |
+| **Biggest security risk?** | Next.js CVE (i18n bypass) + missing per-domain rate limit + mock reputation provider |
 | **Manual QA done?** | Checklist above — run in staging before trial |
 | **Production checklist?** | Section 11 above — 20 items across infrastructure, security, operations |
-| **Can this be called MVP?** | Yes — all three user journeys work end-to-end, securely, bilingually |
+| **Can this be called MVP?** | Yes — all three user journeys work end-to-end, securely, bilingually, as an advisory tool |
