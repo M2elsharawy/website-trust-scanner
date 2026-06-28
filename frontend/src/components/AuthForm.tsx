@@ -58,8 +58,9 @@ function AuthFormInner({ mode }: { mode: Mode }) {
         return
       }
 
-      const next = searchParams.get('next')
-      router.push(next ? next : `/${locale}/sites`)
+      const raw = searchParams.get('next')
+      const next = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : null
+      router.push(next ?? `/${locale}/sites`)
       router.refresh()
     } catch {
       setError(t('errors.generic'))
