@@ -8,7 +8,7 @@ Mandatory security order (must not be reordered):
   4.  Extract validated hostname  — guard if empty
   4b. Second Do Not Scan check   — only if hostname changed after DNS
   5.  Scan policy check
-  6.  Rate limit / quota          — TODO: per-domain cap (IP-level handled by @limiter at API layer)
+  6.  Rate limit / quota          — per-domain cap enforced via Redis
   7.  Audit log: scan requested
   8.  Run passive scanners
   9.  Audit log: completed or failed
@@ -18,12 +18,16 @@ Only passive checks run here. No port scan, no crawling, no exposed-file
 enumeration. Header values and response bodies are never stored or returned.
 """
 
+import logging
 from urllib.parse import urlparse
 
+import redis.asyncio as aioredis
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import DomainBlockedError, URLValidationError
+from app.core.config import settings
+from app.core.exceptions import DomainBlockedError, RateLimitExceededError, URLValidationError
+from app.core.rate_limiter import DOMAIN_SCAN_LIMIT
 from app.core.scan_policy import ScanType, check_scan_allowed
 from app.core.url_validator import validate_url
 from app.models.do_not_scan import DoNotScan
@@ -32,6 +36,42 @@ from app.scanners.runner import run_public_scan
 from app.scanners.trust_score import compute_trust_report
 from app.schemas.scan import TrustReport
 from app.services.audit_logger import log_event
+
+logger = logging.getLogger(__name__)
+
+_DOMAIN_RATE_LIMIT_MAX: int = int(DOMAIN_SCAN_LIMIT.split("/")[0])
+_DOMAIN_RATE_LIMIT_WINDOW: int = 3600  # seconds (1 hour)
+
+
+async def _enforce_domain_rate_limit(domain: str) -> None:
+    """
+    Enforce per-domain scan cap (DOMAIN_SCAN_LIMIT) using Redis.
+
+    Uses INCR + EXPIRE so the counter resets automatically after the window.
+    Falls back silently if Redis is unreachable — a transient Redis failure
+    must never block a legitimate scan request.
+    """
+    key = f"domain_scan:{domain}"
+    try:
+        r = aioredis.from_url(
+            settings.redis_url,
+            decode_responses=True,
+            socket_connect_timeout=2,
+        )
+        async with r:
+            count = await r.incr(key)
+            if count == 1:
+                await r.expire(key, _DOMAIN_RATE_LIMIT_WINDOW)
+            if count > _DOMAIN_RATE_LIMIT_MAX:
+                raise RateLimitExceededError(
+                    message="Domain scan limit exceeded — try again later"
+                )
+    except RateLimitExceededError:
+        raise
+    except Exception:
+        logger.warning(
+            "domain_rate_limit: Redis unavailable for %s — scan allowed through", domain
+        )
 
 
 async def run_public_trust_scan(
@@ -108,7 +148,8 @@ async def run_public_trust_scan(
 
     # ── Step 6: Rate limit / quota ────────────────────────────────────────────
     # Per-IP rate limiting is handled by @limiter.limit at the API layer.
-    # TODO: add per-domain cap (DOMAIN_SCAN_LIMIT) here in a dedicated PR.
+    # Per-domain cap is enforced here across all callers.
+    await _enforce_domain_rate_limit(validated_hostname)
 
     # ── Step 7: Audit log — scan requested ───────────────────────────────────
     await log_event(
@@ -228,7 +269,10 @@ async def run_owner_trust_scan(
         is_on_do_not_scan_list=False,
     )
 
-    # ── Steps 6–8: Run passive scanners, return report for caller to persist ──
+    # ── Step 6: Rate limit / quota ────────────────────────────────────────────
+    await _enforce_domain_rate_limit(validated_hostname)
+
+    # ── Steps 7–9: Run passive scanners, return report for caller to persist ──
     try:
         scan_data = await run_public_scan(validated_hostname)
         # compute_trust_report receives site.domain (not validated_hostname)
@@ -320,7 +364,10 @@ async def run_lead_audit_scan(
         is_on_do_not_scan_list=False,
     )
 
-    # ── Steps 6–8: Run passive scanners, return ScanData for caller to process ─
+    # ── Step 6: Rate limit / quota ────────────────────────────────────────────
+    await _enforce_domain_rate_limit(validated_hostname)
+
+    # ── Steps 7–9: Run passive scanners, return ScanData for caller to process ─
     try:
         scan_data = await run_public_scan(validated_hostname)
     except Exception:

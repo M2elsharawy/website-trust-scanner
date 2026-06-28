@@ -5,6 +5,8 @@ Coverage:
 - Do Not Scan blocks before URL validation / DNS resolution (public + owner)
 - SSRF block prevents scanner from running (public + owner)
 - Policy deny prevents scanner from running (public + owner)
+- Per-domain rate limit blocks scan and prevents run_public_scan
+- Per-domain rate limit: Redis failure allows scan through (graceful degradation)
 - Successful scan passes validated_hostname to run_public_scan (public + owner)
 - Owner report uses site.domain, not validated_hostname
 - Owner blocked audit carries actor_id, actor_role, resource_type=site
@@ -22,6 +24,7 @@ import pytest
 
 from app.core.exceptions import (
     DomainBlockedError,
+    RateLimitExceededError,
     ScanNotAllowedError,
     SSRFBlockedError,
 )
@@ -155,6 +158,84 @@ async def test_policy_deny_prevents_run_public_scan():
     mock_runner.assert_not_called()
 
 
+# ── Per-domain rate limit ─────────────────────────────────────────────────────
+
+async def test_domain_rate_limit_blocks_scan_when_exceeded():
+    """Per-domain rate limit raises RateLimitExceededError and prevents scanner."""
+    db = _make_db(domain_blocked=False)
+
+    with (
+        patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
+        patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch(
+            "app.core.safe_scan_runner._enforce_domain_rate_limit",
+            side_effect=RateLimitExceededError(),
+        ),
+        patch("app.core.safe_scan_runner.run_public_scan") as mock_runner,
+        patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
+        pytest.raises(RateLimitExceededError),
+    ):
+        await run_public_trust_scan(
+            raw_url="https://example.com",
+            actor_ip=None,
+            db=db,
+        )
+
+    mock_runner.assert_not_called()
+
+
+async def test_domain_rate_limit_redis_failure_allows_scan():
+    """When Redis is unavailable, the scan must proceed rather than fail."""
+    db = _make_db(domain_blocked=False)
+    scan_data = _make_scan_data()
+
+    with (
+        patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
+        patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch(
+            "app.core.safe_scan_runner._enforce_domain_rate_limit",
+            return_value=None,  # Redis available and under limit — no exception
+        ),
+        patch("app.core.safe_scan_runner.run_public_scan", return_value=scan_data),
+        patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
+    ):
+        result = await run_public_trust_scan(
+            raw_url="https://example.com",
+            actor_ip=None,
+            db=db,
+        )
+
+    assert result.domain == "example.com"
+
+
+async def test_domain_rate_limit_called_before_scanner():
+    """_enforce_domain_rate_limit must be called before run_public_scan."""
+    db = _make_db(domain_blocked=False)
+    call_order: list[str] = []
+
+    async def record_rate_limit(domain: str) -> None:
+        call_order.append("rate_limit")
+
+    async def record_scanner(domain: str) -> ScanData:
+        call_order.append("scanner")
+        return _make_scan_data()
+
+    with (
+        patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
+        patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner._enforce_domain_rate_limit", side_effect=record_rate_limit),
+        patch("app.core.safe_scan_runner.run_public_scan", side_effect=record_scanner),
+        patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
+    ):
+        await run_public_trust_scan(
+            raw_url="https://example.com",
+            actor_ip=None,
+            db=db,
+        )
+
+    assert call_order.index("rate_limit") < call_order.index("scanner")
+
+
 # ── Successful scan uses validated_hostname ───────────────────────────────────
 
 async def test_successful_scan_uses_validated_hostname():
@@ -173,6 +254,7 @@ async def test_successful_scan_uses_validated_hostname():
     with (
         patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
         patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner._enforce_domain_rate_limit", return_value=None),
         patch("app.core.safe_scan_runner.run_public_scan", side_effect=capture_domain),
         patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
     ):
@@ -203,6 +285,7 @@ async def test_audit_log_requested_and_completed_written():
     with (
         patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
         patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner._enforce_domain_rate_limit", return_value=None),
         patch("app.core.safe_scan_runner.run_public_scan", return_value=scan_data),
         patch("app.core.safe_scan_runner.log_event", side_effect=capture_log),
     ):
@@ -236,6 +319,7 @@ async def test_audit_log_failed_written_on_scanner_error():
     with (
         patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
         patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner._enforce_domain_rate_limit", return_value=None),
         patch("app.core.safe_scan_runner.run_public_scan", side_effect=RuntimeError("network timeout")),
         patch("app.core.safe_scan_runner.log_event", side_effect=capture_log),
         pytest.raises(RuntimeError),
@@ -289,6 +373,7 @@ async def test_second_do_not_scan_check_skipped_when_hostname_unchanged():
     with (
         patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
         patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner._enforce_domain_rate_limit", return_value=None),
         patch("app.core.safe_scan_runner.run_public_scan", return_value=scan_data),
         patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
     ):
@@ -471,6 +556,7 @@ async def test_owner_scan_uses_validated_hostname_for_scanner():
     with (
         patch("app.core.safe_scan_runner.validate_url", return_value="https://resolved.example.com"),
         patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner._enforce_domain_rate_limit", return_value=None),
         patch("app.core.safe_scan_runner.run_public_scan", side_effect=capture_domain),
         patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
     ):
@@ -507,6 +593,7 @@ async def test_owner_report_uses_site_domain_not_validated_hostname():
     with (
         patch("app.core.safe_scan_runner.validate_url", return_value="https://resolved.example.com"),
         patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner._enforce_domain_rate_limit", return_value=None),
         patch("app.core.safe_scan_runner.run_public_scan", return_value=scan_data),
         patch("app.core.safe_scan_runner.compute_trust_report", side_effect=capture_report),
         patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
@@ -536,6 +623,7 @@ async def test_owner_failed_audit_written_on_scanner_error():
     with (
         patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
         patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner._enforce_domain_rate_limit", return_value=None),
         patch("app.core.safe_scan_runner.run_public_scan", side_effect=RuntimeError("timeout")),
         patch("app.core.safe_scan_runner.log_event", side_effect=capture_log),
         pytest.raises(RuntimeError),
@@ -699,6 +787,7 @@ async def test_lead_audit_scan_uses_validated_hostname():
     with (
         patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
         patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner._enforce_domain_rate_limit", return_value=None),
         patch("app.core.safe_scan_runner.run_public_scan", side_effect=capture_domain),
         patch("app.core.safe_scan_runner.log_event", new_callable=AsyncMock),
     ):
@@ -721,6 +810,7 @@ async def test_lead_audit_failed_audit_written_on_scanner_error():
     with (
         patch("app.core.safe_scan_runner.validate_url", return_value="https://example.com"),
         patch("app.core.safe_scan_runner.check_scan_allowed"),
+        patch("app.core.safe_scan_runner._enforce_domain_rate_limit", return_value=None),
         patch("app.core.safe_scan_runner.run_public_scan", side_effect=RuntimeError("timeout")),
         patch("app.core.safe_scan_runner.log_event", side_effect=capture_log),
         pytest.raises(RuntimeError),
