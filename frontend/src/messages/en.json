@@ -282,7 +282,8 @@
     "subtitle": "Internal admin tools.",
     "notice": "Read-only MVP — you can view lead information, but cannot scan, modify statuses, or export data from this interface.",
     "error": "Could not verify access. Please try again.",
-    "view_leads": "Leads"
+    "view_leads": "Leads",
+    "view_analytics": "Analytics"
   },
   "admin_leads": {
     "title": "Leads",
@@ -310,6 +311,7 @@
     "title": "Lead Detail",
     "not_found": "Lead not found.",
     "error": "Could not load lead. Please try again.",
+    "disclaimer": "Lead scores reflect surface-level indicators only (HTTPS, SSL, security headers, domain reputation). No penetration testing or deep scans are performed.",
     "fields": {
       "domain": "Domain",
       "status": "Status",
@@ -318,6 +320,45 @@
       "created": "Created",
       "updated": "Updated",
       "notes": "Notes"
+    }
+  },
+  "admin_analytics": {
+    "title": "Analytics",
+    "subtitle": "Platform-wide read-only metrics. No personal data is displayed.",
+    "error": "Could not load analytics. Please try again.",
+    "summary": {
+      "total_users": "Users",
+      "total_sites": "Sites",
+      "verified_sites": "Verified Sites",
+      "total_scans": "Total Scans"
+    },
+    "risk": {
+      "title": "Risk Distribution",
+      "subtitle": "Based on the latest scan per site.",
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "audit": {
+      "title": "Recent Activity",
+      "empty": "No audit log entries found.",
+      "columns": {
+        "action": "Action",
+        "outcome": "Outcome",
+        "role": "Role",
+        "resource": "Resource",
+        "time": "Time"
+      }
+    },
+    "trends": {
+      "title": "Scan Trends (30 days)",
+      "empty": "No scan data for this period.",
+      "columns": {
+        "date": "Date",
+        "count": "Scans",
+        "avg_score": "Avg. Score"
+      }
     }
   },
   "owner_scans_list": {
