@@ -133,6 +133,11 @@ export default async function AdminLeadDetailPage({
               {lead.domain}
             </h1>
 
+            {/* Surface-level disclaimer */}
+            <div className="rounded-lg border border-slate-700/50 bg-slate-800/30 px-4 py-3">
+              <p className="text-xs text-slate-400">{t('disclaimer')}</p>
+            </div>
+
             <dl className="bg-slate-900 border border-slate-800 rounded-xl divide-y divide-slate-800">
               <Row label={t('fields.domain')} value={lead.domain} mono />
               <Row
