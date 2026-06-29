@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Link } from '@/i18n/navigation'
+import BrandLogo from '@/components/BrandLogo'
 import LogoutButton from '@/components/LogoutButton'
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
@@ -23,12 +24,18 @@ function scoreColor(score: number): string {
   return 'text-red-400'
 }
 
+function scoreBadgeBg(score: number): string {
+  if (score >= 80) return 'bg-emerald-950/30 ring-1 ring-emerald-800/40'
+  if (score >= 60) return 'bg-blue-950/30 ring-1 ring-blue-800/40'
+  if (score >= 40) return 'bg-amber-950/30 ring-1 ring-amber-800/40'
+  return 'bg-red-950/30 ring-1 ring-red-800/40'
+}
+
 export default function SiteScansListPage() {
   const params = useParams()
   const locale = useLocale()
   const siteId = params.siteId as string
   const t = useTranslations('owner_scans_list')
-  const tc = useTranslations('common')
 
   const [scans, setScans] = useState<ScanSummary[]>([])
   const [loadStatus, setLoadStatus] = useState<LoadStatus>('loading')
@@ -76,26 +83,16 @@ export default function SiteScansListPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
       <header className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
-        <Link
-          href="/sites"
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-        >
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white text-sm font-bold">T</span>
-          </div>
-          <span className="font-semibold text-slate-100">{tc('app_name')}</span>
-        </Link>
+        <BrandLogo href="/sites" />
         <LogoutButton />
       </header>
 
-      {/* Main */}
       <main className="flex-1 flex flex-col items-center justify-center p-6">
         <div className="w-full max-w-xl space-y-4">
           <Link
             href="/sites"
-            className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors"
           >
             ← {t('back_to_sites')}
           </Link>
@@ -108,20 +105,23 @@ export default function SiteScansListPage() {
               {scans.map((scan) => (
                 <li
                   key={scan.id}
-                  className="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex items-center justify-between gap-4"
+                  className="bg-slate-900 border border-slate-700/80 rounded-2xl p-4 flex items-center justify-between gap-4"
                 >
-                  <div className="flex flex-col gap-1">
-                    <span className={`text-2xl font-bold ${scoreColor(scan.trust_score)}`}>
-                      {scan.trust_score}
-                      <span className="text-slate-500 text-xs font-normal">/100</span>
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center ${scoreBadgeBg(scan.trust_score)}`}>
+                      <span className={`text-lg font-bold tabular-nums ${scoreColor(scan.trust_score)}`}>
+                        {scan.trust_score}
+                      </span>
+                    </div>
                     <span className="text-slate-400 text-xs">
                       {new Date(scan.scanned_at).toLocaleString(locale)}
                     </span>
                   </div>
                   <Link
                     href={`/sites/${encodeURIComponent(siteId)}/scans/${encodeURIComponent(scan.id)}`}
-                    className="shrink-0 text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                    className="shrink-0 text-xs text-blue-400 hover:text-blue-300 transition-colors
+                               px-3 py-1.5 rounded-lg border border-blue-800/50 hover:border-blue-700/60
+                               hover:bg-blue-950/30"
                   >
                     {t('view_details')}
                   </Link>

@@ -1,8 +1,9 @@
-import { use } from 'react'
 import type { Metadata } from 'next'
 import { useTranslations } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
-import { Link } from '@/i18n/navigation'
+import BrandLogo from '@/components/BrandLogo'
+import AppFooter from '@/components/AppFooter'
+import LanguageToggle from '@/components/LanguageToggle'
 
 export async function generateMetadata({
   params,
@@ -14,7 +15,7 @@ export async function generateMetadata({
   return { title: t('page_title') }
 }
 
-// ── Sub-components (pure display, no state, no API) ──────────────────────────
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function FlowStep({ text, index }: { text: string; index: number }) {
   return (
@@ -30,7 +31,7 @@ function FlowStep({ text, index }: { text: string; index: number }) {
 function CheckItem({ text, done }: { text: string; done: boolean }) {
   return (
     <li className="flex items-start gap-2 text-sm">
-      <span className={done ? 'text-emerald-400 mt-0.5' : 'text-slate-500 mt-0.5'}>
+      <span className={done ? 'text-emerald-400 mt-0.5' : 'text-slate-600 mt-0.5'}>
         {done ? '✓' : '○'}
       </span>
       <span className={done ? 'text-slate-200' : 'text-slate-400'}>{text}</span>
@@ -40,14 +41,14 @@ function CheckItem({ text, done }: { text: string; done: boolean }) {
 
 function ProgressBar({ pct, label }: { pct: number; label: string }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <div className="flex justify-between text-xs text-slate-400">
         <span>{label}</span>
         <span className="font-mono text-slate-300">{pct}%</span>
       </div>
-      <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
         <div
-          className="h-full bg-blue-600 rounded-full transition-none"
+          className="h-full bg-blue-600 rounded-full"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -85,14 +86,12 @@ function PathCard({
         </span>
       </div>
 
-      {/* Flow */}
       <div className="space-y-2.5">
         {flow.map((step, i) => (
           <FlowStep key={i} text={step} index={i} />
         ))}
       </div>
 
-      {/* Done / Remaining */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
         <div>
           <p className="text-xs font-medium text-emerald-400 mb-2 uppercase tracking-wide">
@@ -119,20 +118,12 @@ function PathCard({
   )
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function RoadmapPage({
-  params,
-}: {
+export default function RoadmapPage(_: {
   params: Promise<{ locale: string }>
 }) {
-  const { locale } = use(params)
   const t = useTranslations('roadmap')
-  const tc = useTranslations('common')
-  const tf = useTranslations('footer')
-
-  const otherLocale = locale === 'ar' ? 'en' : 'ar'
-  const otherLocaleLabel = tc('switch_language')
 
   const progress: Array<{ key: string; pct: number }> = [
     { key: 'security_arch', pct: 95 },
@@ -145,28 +136,18 @@ export default function RoadmapPage({
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
       <header className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
-        <Link
-          href="/"
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-        >
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white text-sm font-bold">T</span>
-          </div>
-          <span className="font-semibold text-slate-100">{tc('app_name')}</span>
-        </Link>
-        <Link
-          href="/roadmap"
-          locale={otherLocale}
-          className="text-sm text-slate-400 hover:text-slate-100 transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-800"
-        >
-          {otherLocaleLabel}
-        </Link>
+        <BrandLogo />
+        <LanguageToggle />
       </header>
 
-      {/* Main */}
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-12 space-y-10">
+        {/* Plain-language intro for visitors */}
+        <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-5 space-y-2">
+          <p className="text-sm font-semibold text-slate-300">{t('visitor_intro.title')}</p>
+          <p className="text-slate-400 text-sm leading-relaxed">{t('visitor_intro.body')}</p>
+        </div>
+
         {/* Hero */}
         <div className="space-y-3">
           <h1 className="text-3xl font-bold text-slate-100">{t('headline')}</h1>
@@ -194,7 +175,6 @@ export default function RoadmapPage({
           </div>
         </div>
 
-        {/* Visitor path */}
         <PathCard
           title={t('visitor_path.title')}
           status={t('visitor_path.status')}
@@ -206,7 +186,6 @@ export default function RoadmapPage({
           remainingLabel={t('status_remaining')}
         />
 
-        {/* Owner path */}
         <PathCard
           title={t('owner_path.title')}
           status={t('owner_path.status')}
@@ -218,7 +197,6 @@ export default function RoadmapPage({
           remainingLabel={t('status_remaining')}
         />
 
-        {/* Admin path */}
         <PathCard
           title={t('admin_path.title')}
           status={t('admin_path.status')}
@@ -250,12 +228,7 @@ export default function RoadmapPage({
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="text-center py-6 border-t border-slate-900">
-        <p className="text-slate-700 text-xs">
-          {tf('tagline')}
-        </p>
-      </footer>
+      <AppFooter />
     </div>
   )
 }

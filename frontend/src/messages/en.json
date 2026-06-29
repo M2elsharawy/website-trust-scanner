@@ -5,12 +5,15 @@
     "switch_language_locale": "ar"
   },
   "home": {
-    "title": "Is this website safe?",
-    "subtitle": "Enter any website URL to get an instant security and trust assessment",
+    "title": "Is this website safe to use?",
+    "subtitle": "Before you share personal data, pay online, or create an account — check this site's trust indicators first.",
     "url_placeholder": "https://example.com",
     "check_button": "Check Now",
     "scanning": "Scanning…",
-    "disclaimer": "This scan checks general security indicators only. No penetration testing or deep scans are performed.",
+    "disclaimer": "We check visible, public security signals only. No intrusive tests. No penetration testing. No data stored.",
+    "trust_signals": {
+      "note": "This advisor reads the same signals your browser can see — HTTPS, SSL, security headers, and domain reputation. No intrusive access. No data stored. No absolute guarantees."
+    },
     "trust_levels": {
       "high": "Trusted",
       "good": "Good",
@@ -23,7 +26,15 @@
       "safe_for_account": "Safe for Account",
       "safe_for_payment": "Safe for Payment"
     },
-    "coming_soon": "Under development — Launching soon"
+    "coming_soon": "Under development — Launching soon",
+    "how_it_works": {
+      "title": "How it works",
+      "steps": [
+        "Enter any website URL — no account needed",
+        "We read publicly visible signals: HTTPS, SSL certificate, security headers, and domain reputation",
+        "You get a clear trust score and a plain-language usage decision"
+      ]
+    }
   },
   "results": {
     "trust_score": "Trust Score",
@@ -46,6 +57,31 @@
     },
     "new_scan": "Check another website",
     "score_based_on": "HTTPS {https} · SSL {ssl} · Headers {headers} · Reputation: {reputation}",
+    "danger_banner": {
+      "title": "Risk indicators detected",
+      "body": "Multiple security checks returned a negative result. We advise against using this site for any sensitive activity.",
+      "checklist": [
+        "Do not enter personal information or passwords",
+        "Do not enter payment details",
+        "Do not create an account on this site",
+        "Check how you received this link before visiting again"
+      ]
+    },
+    "what_this_means": {
+      "title": "What this result means",
+      "high": "This site passed all visible security checks. No reputation flags were found. This is a good sign — but no online check is a substitute for your own judgment.",
+      "good": "This site shows good security signals overall. Some optional headers are missing, but the essentials are in place. Normal caution applies.",
+      "medium": "This site has mixed results. Some signals are in place, but gaps were found. Be extra careful — avoid entering sensitive data unless you have a strong independent reason to trust this site.",
+      "low": "This site failed most visible security checks. These are serious risk indicators. Treat any link or content from this site with high caution."
+    },
+    "what_to_do": {
+      "title": "What should you do now?",
+      "high": "You can use this site with normal caution. Always verify the domain name in your browser's address bar before entering sensitive data.",
+      "good": "You can use this site normally. Keep standard safe-browsing habits in mind — verify the domain, use strong passwords, and avoid reusing credentials.",
+      "medium": "Proceed carefully. Avoid entering passwords, financial details, or government ID information on this site until its security indicators improve.",
+      "danger": "Avoid visiting this site. If you already entered any data there, consider changing your passwords and monitoring your accounts for unusual activity."
+    },
+    "advisor_note": "This result reflects publicly visible security signals at the time of the scan. It is not a security audit and does not guarantee the site is fully safe or unsafe.",
     "decision": {
       "title": "Usage Decision",
       "verdict": {
@@ -141,7 +177,17 @@
   },
   "footer": {
     "tagline": "Safe Scan • Non-Intrusive • Trustworthy",
-    "roadmap_link": "Product Roadmap"
+    "roadmap_link": "Roadmap",
+    "terms_link": "Terms",
+    "privacy_link": "Privacy"
+  },
+  "terms": {
+    "page_title": "Terms of Service",
+    "coming_soon": "Full terms of service will be published before the public launch of this product."
+  },
+  "privacy": {
+    "page_title": "Privacy Policy",
+    "coming_soon": "The full privacy policy will be published before the public launch of this product."
   },
   "roadmap": {
     "page_title": "Product Roadmap",
@@ -151,6 +197,10 @@
     "status_remaining": "Remaining",
     "status_label": "Status",
     "note_estimates": "These percentages are planning estimates, not automated measurements.",
+    "visitor_intro": {
+      "title": "What is this product?",
+      "body": "Website Trust Advisor helps you decide whether a website is safe before you share your data, create an account, or make a payment. It reads publicly visible security signals only — no intrusive scans, no data stored. The roadmap below shows what is built, what is in progress, and what comes next."
+    },
     "where_now_label": "Where we are now",
     "where_now_value": "All three user paths are complete (visitor, owner, admin). MVP is ready for limited trial.",
     "next_step_label": "Next step",
@@ -256,6 +306,8 @@
     "submitting": "Please wait…",
     "show_password": "Show password",
     "hide_password": "Hide password",
+    "forgot_password": "Forgot password?",
+    "forgot_password_coming_soon": "Password reset will be available before the public launch of this product.",
     "errors": {
       "invalid_credentials": "Incorrect email or password.",
       "account_locked": "Account is temporarily locked. Try again in 15 minutes.",
