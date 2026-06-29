@@ -102,16 +102,18 @@ export default function ScanDetailPage() {
 
           {/* Score card */}
           <div className="bg-slate-900 border border-slate-700/80 rounded-2xl p-6 flex flex-col items-center gap-4 shadow-2xl shadow-black/30">
-            <div
-              className={`w-28 h-28 rounded-full ring-4 ring-offset-2 ring-offset-slate-900 ${colors.ring} ${colors.bg}
-                          flex flex-col items-center justify-center`}
-            >
-              <span className={`text-4xl font-bold tabular-nums ${colors.text}`}>{scan.trust_score}</span>
-              <span className="text-slate-500 text-xs mt-0.5">/100</span>
+            <div dir="ltr" className="flex flex-col items-center gap-3">
+              <div
+                className={`w-28 h-28 rounded-full ring-4 ring-offset-2 ring-offset-slate-900 ${colors.ring} ${colors.bg}
+                            flex flex-col items-center justify-center`}
+              >
+                <span className={`text-4xl font-bold tabular-nums ${colors.text}`}>{scan.trust_score}</span>
+                <span className="text-slate-500 text-xs mt-0.5">/100</span>
+              </div>
+              <span className={`inline-flex items-center px-3 py-1 rounded-full border text-sm font-semibold ${colors.badge}`}>
+                {t(`home.trust_levels.${trust_level}` as Parameters<typeof t>[0])}
+              </span>
             </div>
-            <span className={`inline-flex items-center px-3 py-1 rounded-full border text-sm font-semibold ${colors.badge}`}>
-              {t(`home.trust_levels.${trust_level}` as Parameters<typeof t>[0])}
-            </span>
           </div>
 
           {/* Disclaimer */}

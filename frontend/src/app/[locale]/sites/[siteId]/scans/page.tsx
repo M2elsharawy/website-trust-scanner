@@ -39,8 +39,10 @@ export default function SiteScansListPage() {
 
   const [scans, setScans] = useState<ScanSummary[]>([])
   const [loadStatus, setLoadStatus] = useState<LoadStatus>('loading')
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
+    setLoadStatus('loading')
     async function load() {
       try {
         const res = await fetch(
@@ -57,7 +59,7 @@ export default function SiteScansListPage() {
       }
     }
     load()
-  }, [siteId])
+  }, [siteId, retryKey])
 
   if (loadStatus === 'loading') {
     return (
@@ -72,11 +74,22 @@ export default function SiteScansListPage() {
       loadStatus === 'unauthorized' ? 'unauthorized' :
       loadStatus === 'not_found'    ? 'not_found'    :
                                       'error'
+    const canRetry = loadStatus === 'error'
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <p className="text-slate-400 text-sm text-center">
-          {t(msgKey as Parameters<typeof t>[0])}
-        </p>
+        <div className="text-center space-y-3">
+          <p className="text-slate-400 text-sm">
+            {t(msgKey as Parameters<typeof t>[0])}
+          </p>
+          {canRetry && (
+            <button
+              onClick={() => setRetryKey((k) => k + 1)}
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors px-4 py-1.5 rounded-lg border border-blue-800/50 hover:bg-blue-950/20"
+            >
+              {t('retry')}
+            </button>
+          )}
+        </div>
       </div>
     )
   }
@@ -88,7 +101,7 @@ export default function SiteScansListPage() {
         <LogoutButton />
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6">
+      <main className="flex-1 flex flex-col items-center justify-start p-6 pt-8">
         <div className="w-full max-w-xl space-y-4">
           <Link
             href="/sites"
@@ -99,7 +112,10 @@ export default function SiteScansListPage() {
           <h1 className="text-xl font-semibold text-slate-100">{t('title')}</h1>
 
           {scans.length === 0 ? (
-            <p className="text-slate-400 text-sm">{t('empty')}</p>
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center space-y-2">
+              <p className="text-slate-400 text-sm">{t('empty')}</p>
+              <p className="text-slate-600 text-xs leading-relaxed">{t('empty_hint')}</p>
+            </div>
           ) : (
             <ul className="space-y-3">
               {scans.map((scan) => (
