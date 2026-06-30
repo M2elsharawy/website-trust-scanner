@@ -1,7 +1,7 @@
 # Project Progress Map
 
-**Last updated:** 2026-06-28  
-**Last SHA on main:** `a8549cc`
+**Last updated:** 2026-06-29  
+**Last SHA on main:** `6366a08`
 
 ---
 
@@ -64,31 +64,24 @@
 
 ---
 
-## 4. Next Recommended Phase
+## 4. Engineering Phase Status
 
-**Owner Fix Plan** — frontend only, no backend changes.
+**Engineering phase is complete.** All three user paths are implemented, tested, and documented. The product is in the Supervised Beta operational phase.
 
-Goal: after a verified owner runs a scan, show them:
-- What's wrong
-- Why it matters
-- How to fix it
-- Text ready to copy for their developer
+### Completed since last map update
 
----
+| Release | Delivered | PRs |
+|---|---|---|
+| 1.0.1 Production Hardening | SSRF, per-domain rate limit, per-IP rate limit, account lockout, refresh token rotation, audit logging | #46–#52 |
+| 1.1 Design & UX Refresh | Cairo font, RTL layout, danger banner, advisor tone, roadmap page, forgot-password UI | #53-series |
+| 1.2 Beta Prep | Owner dashboard UX (layout, empty states, retry), RTL score ring fix, new i18n keys | PR #53 (open draft) |
+| Pre-Launch Validation | 8-angle comprehensive review, launch decision, operational gate, beta operating cycle | PRs #54–#57 |
 
-## 5. Remaining Product Work
+### Open PRs (not yet on main)
 
-### Near-term (owner journey)
-- [ ] Owner Fix Plan component (`FixPlan.tsx`)
-- [ ] Copy fix instructions button (`CopyButton.tsx`)
-- [ ] Owner scan result page (needs auth/API decision first)
-- [ ] Before/After score comparison
-
-### Later
-- [ ] Export developer task (file/integration)
-- [ ] PDF/report polish
-- [ ] Scheduled re-scan improvements
-- [ ] Admin lead-to-subscription flow
+| PR | Title | Type | Status |
+|---|---|---|---|
+| #53 | Release 1.2 Beta Trial Preparation | Frontend + Docs | Open draft — do not merge until TB1–TB5 confirmed by deployer |
 
 ---
 
