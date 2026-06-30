@@ -5,6 +5,8 @@
 **Merged PRs this sprint:** #43 (admin analytics), #45 (UX polish + open redirect fix)  
 **Prepared by:** Internal engineering team
 
+> **Amendment (2026-06-29):** Per-domain rate limiting, identified as a blocker in this report, was implemented in Release 1.0.1 via `_enforce_domain_rate_limit()` in `safe_scan_runner.py`. References to it as a TODO or missing control below are historical — the control is now active.
+
 ---
 
 ## Product Guardrails

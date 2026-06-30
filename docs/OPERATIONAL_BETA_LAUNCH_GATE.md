@@ -190,7 +190,7 @@ These files are in stable, tested state. No changes until post-Beta findings are
 - `backend/app/api/deps.py`
 - `backend/app/scanners/`
 - `backend/alembic/versions/`
-- `frontend/src/middleware.ts`
+- `frontend/src/proxy.ts` (renamed from `middleware.ts` in Release 1.0.1 — Next.js 16 convention)
 - `frontend/src/messages/en.json` and `ar.json`
 
 ---

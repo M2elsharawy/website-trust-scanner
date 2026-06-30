@@ -6,6 +6,8 @@
 **Main commit:** `45aec8b` — docs: Final MVP Closure Report — product guardrails, MVP Feature Complete  
 **Scope:** Read and verify only. No code changes. Any issue found is documented, not fixed.
 
+> **Amendment (2026-06-29):** Issue B2 (per-domain rate limit not enforced) was resolved in Release 1.0.1 — `_enforce_domain_rate_limit()` is now active in `safe_scan_runner.py`. The silent-pass when Redis is unavailable is a known accepted limitation (B2) for the supervised beta; harden before public launch. Issue RC1-5 (`middleware.ts`) was resolved in Release 1.0.1 — renamed to `proxy.ts`.
+
 ---
 
 ## Product Guardrail Reminder

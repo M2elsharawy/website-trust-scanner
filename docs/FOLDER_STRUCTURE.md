@@ -1,8 +1,10 @@
 # Folder Structure
 ## Website Trust & Security Advisor
 
-**Version:** Phase 1 Design  
-**Stack:** Next.js 14 (Frontend) + FastAPI (Backend)
+> **Superseded (2026-06-29):** This document describes the planned Phase 1 Design structure and does not reflect the actual implemented codebase. For the current accurate structure, see `docs/REPOSITORY_MAP.md`. This file is retained for historical reference only.
+
+**Version:** Phase 1 Design (historical)  
+**Stack:** Next.js 14 (Frontend) + FastAPI (Backend) — actual stack is Next.js 16.2.9
 
 ---
 

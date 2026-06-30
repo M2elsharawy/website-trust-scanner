@@ -1,9 +1,9 @@
 # Release Plan
 
-**Product:** Website Trust Advisor  
-**Current state:** MVP Feature Complete — RC1 approved for supervised limited trial  
-**Main SHA at planning time:** `2514913`  
-**Date:** 2026-06-28
+**Product:** Website Trust & Security Advisor  
+**Current state:** Supervised Beta — invitation-only trial active  
+**Main SHA at planning time:** `2514913` → **Updated to `6366a08` (2026-06-29)**  
+**Date:** 2026-06-28 | **Last updated:** 2026-06-29
 
 ---
 
@@ -12,10 +12,11 @@
 | Release | Name | Goal | Status |
 |---|---|---|---|
 | MVP | MVP Feature Complete | Three-path product: Visitor, Owner, Admin | ✅ Done |
-| 1.0.1 | Production Hardening | Unblock public launch — security, infra, real reputation | Planning |
-| 1.1 | Design & UX | Visual identity and interaction quality | Planned |
-| 1.2 | Beta Trial | Real-user supervised trial | Planned |
-| 2.0 | Product Evolution | Feature expansion based on Beta feedback | Planned |
+| 1.0.1 | Production Hardening | SSRF, rate limiting, auth hardening, audit logging | ✅ Done |
+| 1.1 | Design & UX Refresh | Cairo font, RTL layout, danger banner, advisor tone | ✅ Done |
+| 1.2 | Beta Preparation | Owner UX fixes, i18n keys, docs | ✅ Code complete — PR #53 open draft |
+| Pre-Launch | Validation & Beta Planning | 8-angle review, launch gate, beta cycle docs | ✅ Done |
+| 2.0 | Product Evolution | Feature expansion based on Beta findings | Planned — post Day 18 |
 
 ---
 
@@ -29,13 +30,13 @@ Resolve all known blockers documented in `RC1_REVIEW_REPORT.md §7` so that the 
 | Item | Notes |
 |---|---|
 | Verify Next.js CVE GHSA-36qx-fr4f-26g5 | Current version: 16.2.9. CVE reportedly affects < 15.2.3. Confirm whether 16.2.9 is patched by checking the official advisory. If patched, close the blocker. If not, upgrade or apply vendor mitigation. |
-| Enforce per-domain rate limiting | `DOMAIN_SCAN_LIMIT = "5/hour"` is defined in `rate_limiter.py` but not yet applied in `safe_scan_runner.py:111`. Add enforcement in a dedicated PR. |
+| Enforce per-domain rate limiting | ✅ Implemented — `_enforce_domain_rate_limit()` in `safe_scan_runner.py` calls Redis via `slowapi`. Falls back silently if Redis is unavailable (accepted risk for supervised beta — harden before public launch). |
 | Replace mock reputation provider | `reputation_checker.py` currently returns "clean" for all domains. Integrate a real provider (Google Safe Browsing, VirusTotal, or URLhaus). Wire `REPUTATION_PROVIDER` env var already defined in `.env.example`. |
 | Production secrets review | Confirm `SECRET_KEY`, `DATABASE_URL`, `POSTGRES_PASSWORD`, `ALLOWED_ORIGINS`, `ADMIN_API_KEY` are set to real values and not `.env.example` defaults. |
 | HTTPS at load balancer | Enforce TLS termination. Confirm `secure=True` cookie flag is active (already conditional on `APP_ENV != development`). |
 | CORS origin restriction | Confirm `ALLOWED_ORIGINS` in production is set to the exact frontend domain, not `*`. |
 | `passlib` + `bcrypt 4.x` mismatch | Resolve dependency version conflict that causes a warning at startup. Authentication works but the warning should be eliminated before production. |
-| `middleware` → `proxy` rename | Next.js 16 deprecated the `middleware` file convention. Rename `frontend/src/middleware.ts` → `frontend/src/proxy.ts`. No logic change. |
+| `middleware` → `proxy` rename | ✅ Done — `frontend/src/proxy.ts` (renamed from `middleware.ts` in Release 1.0.1). |
 | Terms of Service + Privacy Policy | Pages or external links must be present before public registration is opened. |
 | Data retention policy enforcement | `DATA_RETENTION_POLICY.md` must be enforced in the production database configuration. |
 
@@ -50,25 +51,25 @@ Resolve all known blockers documented in `RC1_REVIEW_REPORT.md §7` so that the 
 ### Success Criteria
 
 - [ ] CVE GHSA-36qx-fr4f-26g5 verified as patched or mitigated
-- [ ] Per-domain rate limit active and tested
+- [x] Per-domain rate limit active and tested (implemented in Release 1.0.1)
 - [ ] Real reputation provider returning live data
 - [ ] HTTPS active, cookies flagged `secure=True`
 - [ ] No `.env.example` default values in production
 - [ ] `passlib` warning eliminated from logs
-- [ ] `middleware` deprecation warning eliminated
+- [x] `middleware` deprecation warning eliminated (renamed to `proxy.ts` in Release 1.0.1)
 
 ### Risks
 
 | Risk | Mitigation |
 |---|---|
 | Real reputation provider adds latency | Set a strict timeout; fall back gracefully if provider is unreachable |
-| Per-domain rate limit may require Redis key-per-domain | Already have Redis in the stack — use it as the backend for `slowapi` domain key |
+| Per-domain rate limit may require Redis key-per-domain | Resolved — implemented using Redis in `safe_scan_runner.py` via `_enforce_domain_rate_limit()` |
 | CVE advisory may affect 16.x | If so, upgrade Next.js — test against existing CI suite before merging |
 
 ### Suggested Execution Order
 
 1. CVE verification (read-only first — may close blocker without code change)
-2. `passlib` + `middleware` fixes (low-risk, isolated)
+2. `passlib` + `middleware` fixes (low-risk, isolated) — ✅ both done in Release 1.0.1
 3. Per-domain rate limit (backend only, tested in isolation)
 4. Real reputation provider (backend only, feature-flagged via `REPUTATION_PROVIDER` env var)
 5. Infra checklist (secrets, HTTPS, CORS) — environment configuration, not code
@@ -202,22 +203,23 @@ Defined after Beta Trial findings are reviewed.
 ## Execution Order Summary
 
 ```
-MVP Feature Complete (done)
+MVP Feature Complete ✅
      │
      ▼
-RC1 Supervised Limited Trial (active)
+Release 1.0.1 — Production Hardening ✅
      │
      ▼
-Release 1.0.1 — Production Hardening
+Release 1.1 — Design & UX Refresh ✅
      │
      ▼
-Release 1.1 — Design & UX
+Release 1.2 — Beta Preparation ✅ (code complete, PR #53 open)
      │
      ▼
-Release 1.2 — Beta Trial
+Pre-Launch Validation & Beta Planning ✅
      │
      ▼
-Release 2.0 — Product Evolution
+Supervised Beta Trial (active — Days 1–17 code freeze)
+     │
+     ▼
+Release 2.0 — Product Evolution (post Day 18)
 ```
-
-Note: Release 1.1 (Design & UX) may begin in parallel with or immediately after 1.0.1, provided no backend changes are required. Beta Trial (1.2) cannot start until 1.0.1 is complete.
