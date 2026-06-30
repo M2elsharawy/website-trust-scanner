@@ -84,6 +84,72 @@ Next.js 16 emits `⚠ The "middleware" file convention is deprecated. Please use
 
 ---
 
+## Redis Rate Limit Fail-Open — Production Decision Required
+
+### Behavior in the current implementation
+
+When Redis is unavailable, `_enforce_domain_rate_limit` logs a `WARNING` and allows the scan to proceed. No scan is blocked due to a Redis failure.
+
+```
+WARNING: domain_rate_limit: Redis unavailable for <domain> — scan allowed through
+```
+
+### Why this is acceptable for the supervised limited trial
+
+During the supervised limited trial the user cohort is small and known. A transient Redis failure is unlikely, and blocking a legitimate invited user because of an infrastructure hiccup would be worse than allowing the scan. Fail-open keeps the trial running even under partial infrastructure degradation.
+
+**This decision is explicitly scoped to the supervised limited trial only.**
+
+### Required decision before public launch
+
+Before opening registration to the public, the team must choose one of the following production postures for Redis unavailability:
+
+| Option | Behaviour | Tradeoff |
+|---|---|---|
+| **Fail-closed** | Return 503 when Redis is unreachable | Prevents abuse during outage; may block legitimate users |
+| **Degraded-mode strict** | Allow scan but log ERROR (not WARNING) and trigger an alert | Scans proceed; on-call team is notified immediately |
+| **Monitoring gate** | Fail-open only if Redis has been healthy within the last N seconds (circuit breaker) | Requires additional infrastructure |
+
+The current WARNING-level log is insufficient for production alerting. Whichever option is chosen, a **Redis health alert** must be active before public launch so that a silent fail-open cannot persist undetected.
+
+---
+
+## Unknown REPUTATION_PROVIDER Fallback — Production Blocker
+
+### Behavior in the current implementation
+
+If `REPUTATION_PROVIDER` is set to an unrecognised value (e.g. a typo, or a provider name that has not been implemented), `reputation_checker.py` logs an `ERROR` and falls back to the mock:
+
+```
+ERROR: Unknown REPUTATION_PROVIDER='virustotal' — falling back to mock
+```
+
+The mock returns `"clean"` for every domain except three hardcoded test entries. This means **a misconfigured production deployment silently marks all domains as safe**.
+
+### Why this is not acceptable for production
+
+A misconfigured `REPUTATION_PROVIDER` is an operator error, not a transient infrastructure failure. Falling back to mock in this case means:
+
+- Domains flagged by real reputation databases appear safe to end users
+- The error is only visible in server logs — the API response gives no indication
+- An operator may not notice the misconfiguration until a real malicious domain is not flagged
+
+**Mock reputation must not be used in any public-facing deployment.**
+
+### Required decision before public launch
+
+Before opening registration to the public, the reputation provider must be wired correctly. The code path for an unknown provider must be one of:
+
+| Option | Behaviour |
+|---|---|
+| **Fail startup** | Application refuses to start if `REPUTATION_PROVIDER` is not a known, configured value |
+| **Return `unknown`** | `check_reputation` returns `ReputationCheckResult(status="unknown")` and the trust score treats unknown as a penalty rather than clean |
+| **Require valid provider** | Configuration validation at startup raises a clear error with remediation instructions |
+
+The current ERROR log + mock fallback is a development-time safety net only. It must be replaced with one of the above before any public registration is opened.
+
+---
+
 ## Production Secrets Checklist
 
 The following must be set to non-default values before any production deployment. Current defaults are placeholders only.
