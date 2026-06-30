@@ -326,7 +326,9 @@
     "title": "My Sites",
     "unauthorized": "Please log in to view your sites.",
     "error": "Could not load your sites. Please try again.",
+    "retry": "Try again",
     "empty": "No sites added yet.",
+    "empty_hint": "Your sites will appear here once your account is set up. Contact your account manager if you have questions.",
     "status_active": "Active",
     "status_pending": "Pending Verification",
     "status_suspended": "Suspended",
@@ -422,7 +424,9 @@
     "unauthorized": "Please log in to view scans.",
     "not_found": "Site not found.",
     "error": "Could not load scans. Please try again.",
+    "retry": "Try again",
     "empty": "No scans found for this site.",
+    "empty_hint": "Your first scan result will appear here once it is ready.",
     "view_details": "View Details",
     "back_to_sites": "My Sites"
   }

@@ -82,7 +82,7 @@ async def create_safe_http_client() -> httpx.AsyncClient:
             max_response_size=2 * 1024 * 1024  # 2MB
         ),
         headers={
-            'User-Agent': 'TrustScanner/1.0 (Security Assessment Tool)'
+            'User-Agent': 'Mozilla/5.0 (compatible; TrustScanner/1.0; +https://trustscanner.app)'
         },
         # منع تحميل الـ body كاملًا تلقائيًا
         # نقرأ headers فقط في معظم الفحوصات

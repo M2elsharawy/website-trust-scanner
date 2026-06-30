@@ -24,7 +24,7 @@ This guide explains how to run the Website Trust Advisor on your local machine f
 ## 1. Clone the Repository
 
 ```bash
-git clone https://github.com/M2elsharawy/website-trust-scanner.git
+git clone https://github.com/WebTrustor/website-trust-scanner.git
 cd website-trust-scanner
 ```
 
@@ -266,6 +266,6 @@ Run through these checks after first setup to confirm everything is working:
 | `POSTGRES_PASSWORD is required` on `docker compose up` | `.env` file missing or password not set | Copy `.env.example` → `.env` and set `POSTGRES_PASSWORD` |
 | `alembic upgrade head` fails with `connection refused` | Database container not yet healthy | Wait for `db` to show `healthy` in `docker compose ps`, then retry |
 | Frontend shows `Network Error` when scanning | `NEXT_PUBLIC_API_URL` not set or backend not running | Confirm backend is up and the env var points to `http://localhost:8000` |
-| Backend shows `passlib: error reading bcrypt version` | Known `passlib` + `bcrypt 4.x` mismatch | Non-breaking warning — authentication still works. Will be resolved in Release 1.0.1. |
-| `middleware` deprecation warning in Next.js build | Next.js 16 convention change | Non-breaking — will be addressed in Release 1.0.1. |
-| `pytest-asyncio` deprecation warnings | Pending test suite update | Non-breaking — tests pass. Will be resolved in Release 1.0.1. |
+| Backend shows `passlib: error reading bcrypt version` | Known `passlib` + `bcrypt 4.x` mismatch | Non-breaking warning — authentication still works. Pending fix in a future release. |
+| `middleware` deprecation warning in Next.js build | Next.js 16 convention change | Resolved in Release 1.0.1 — current codebase uses proxy.ts. |
+| `pytest-asyncio` deprecation warnings | Pending test suite update | Non-breaking — tests pass. Pending fix in a future release. |

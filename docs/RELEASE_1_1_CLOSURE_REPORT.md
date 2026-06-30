@@ -3,7 +3,7 @@
 **Product:** Website Trust & Security Advisor  
 **Release:** 1.1 — Design & UX Refresh  
 **Closed:** 2026-06-29  
-**PR:** [#51 — Release 1.1 Design and UX Refresh](https://github.com/M2elsharawy/website-trust-scanner/pull/51)  
+**PR:** [#51 — Release 1.1 Design and UX Refresh](https://github.com/WebTrustor/website-trust-scanner/pull/51)  
 **Merge Status:** ✅ Merged  
 **Merge Commit:** `6e6594d5a7c23d860e4ecc98a90ac88257b379fa`  
 **Final main commit:** `6e6594d Release 1.1 Design and UX Refresh`
